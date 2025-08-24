@@ -109,7 +109,6 @@
 
               <button class="btn" type="submit">Log in →</button>
 
-              <!-- GOOGLE SIGN-IN -->
               <div style="margin-top:10px;">
                 <div id="g_id_onload"
                      data-client_id="YOUR_GOOGLE_CLIENT_ID"
@@ -135,8 +134,8 @@
   </div>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <script>
-    // show/hide password
     const toggle=document.getElementById('toggle');
     const pw=document.getElementById('pw');
     toggle?.addEventListener('click',()=>{
@@ -146,35 +145,68 @@
       toggle.setAttribute('aria-pressed', String(isPw));
     });
 
-    
-    const form=document.getElementById('login');
-    form?.addEventListener('submit',(e)=>{
+    function onGoogleSignIn(){
+      alert('Google sign-in token received. Connect Firebase to complete login.');
+    }
+  </script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import {
+      getAuth,
+      setPersistence,
+      browserLocalPersistence,
+      browserSessionPersistence,
+      signInWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhZMh2GxUYmeZFA2l_gp5SCugLKCxAfPI",
+      authDomain: "paytroll-ee598.firebaseapp.com",
+      projectId: "paytroll-ee598",
+      storageBucket: "paytroll-ee598.firebasestorage.app",
+      messagingSenderId: "932912748301",
+      appId: "1:932912748301:web:786063508d5b84fb498244",
+      measurementId: "G-G6603S6Q91"
+    };
+
+    // Init
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const form = document.getElementById('login');
+    form?.addEventListener('submit', async (e)=>{
       e.preventDefault();
-      const email=(document.getElementById('email')?.value||'').trim();
-      const pass=(document.getElementById('pw')?.value||'').trim();
-
-      const savedEmail=localStorage.getItem('userEmail');
-      const savedPwd=localStorage.getItem('userPwd');
-
+      const email = (document.getElementById('email')?.value||'').trim();
+      const pass  = (document.getElementById('pw')?.value||'').trim();
       if(!email || !pass){ alert('Enter email & password.'); return; }
-      if(email===savedEmail && pass===savedPwd){
-        if(document.getElementById('remember').checked){
-          localStorage.setItem('rememberMe','1');
-        }else{
-          localStorage.removeItem('rememberMe');
-        }
-        
-        window.location.href='dashboard.html';
-      }else{
-        alert('Invalid credentials. Create account first or check your details.');
+
+      const remember = document.getElementById('remember')?.checked;
+      const persistence = remember ? browserLocalPersistence : browserSessionPersistence;
+
+      const btn = form.querySelector('.btn');
+      btn.disabled = true; const old = btn.textContent; btn.textContent = 'Logging in…';
+
+      try{
+        await setPersistence(auth, persistence);
+        await signInWithEmailAndPassword(auth, email, pass);
+
+        localStorage.setItem('userRole','user');
+        localStorage.setItem('userEmail', email);
+
+        window.location.href = 'dashboard.html';
+      }catch(err){
+        // common error mapping
+        let msg = 'Login failed.';
+        const code = err?.code || '';
+        if(code.includes('invalid-credential') || code.includes('wrong-password')) msg = 'Invalid email or password.';
+        else if(code.includes('user-not-found')) msg = 'No account found for this email.';
+        else if(code.includes('too-many-requests')) msg = 'Too many attempts. Try again later.';
+        alert(msg);
+      }finally{
+        btn.disabled = false; btn.textContent = old;
       }
     });
-
-    function onGoogleSignIn(){
-      
-      localStorage.setItem('userRole','user');
-      window.location.href='dashboard.html';
-    }
   </script>
 </body>
 </html>
