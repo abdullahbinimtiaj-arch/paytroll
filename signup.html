@@ -168,40 +168,67 @@
   </div>
 
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script>
-    const toggle=document.getElementById('toggle');
-    const pw=document.getElementById('pw');
-    toggle?.addEventListener('click',()=>{
-      const isPw=pw.type==='password';
-      pw.type=isPw?'text':'password';
-      toggle.textContent=isPw?'Hide':'Show';
+  <script type="module">
+    /* Firebase imports */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  
+    /* তোমার Firebase config (অপরিবর্তিত) */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhZMh2GxUYmeZFA2l_gp5SCugLKCxAfPI",
+      authDomain: "paytroll-ee598.firebaseapp.com",
+      projectId: "paytroll-ee598",
+      storageBucket: "paytroll-ee598.firebasestorage.app",
+      messagingSenderId: "932912748301",
+      appId: "1:932912748301:web:786063508d5b84fb498244",
+      measurementId: "G-G6603S6Q91"
+    };
+  
+    /* Init */
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+  
+    const toggle = document.getElementById('toggle');
+    const pw     = document.getElementById('pw');
+    toggle?.addEventListener('click', () => {
+      const isPw = pw.type === 'password';
+      pw.type = isPw ? 'text' : 'password';
+      toggle.textContent = isPw ? 'Hide' : 'Show';
       toggle.setAttribute('aria-pressed', String(isPw));
     });
-
-    const form=document.getElementById('signup');
-    form?.addEventListener('submit',(e)=>{
+  
+    /* ===== Signup submit → Firebase ===== */
+    const form = document.getElementById('signup');
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const pw1=document.getElementById('pw').value.trim();
-      const pw2=document.getElementById('pw2').value.trim();
-      if(pw1!==pw2){ alert('Passwords do not match.'); return; }
-      if(pw1.length<8){ alert('Password must be at least 8 characters.'); return; }
-      if(!document.getElementById('tos').checked){ alert('You must agree to the Terms.'); return; }
-
-      const email=(document.getElementById('email')?.value||'').trim();
-      localStorage.setItem('userRole','user');
-      localStorage.setItem('userEmail', email);
-      localStorage.setItem('userPwd', pw1); // demo only
-
-      const btn=form.querySelector('.btn');
-      btn.disabled=true; btn.textContent='Creating…';
-      setTimeout(()=>{ window.location.href='login.html'; }, 600);
+  
+      const email = (document.getElementById('email')?.value || '').trim();
+      const pw1   = (document.getElementById('pw')?.value   || '').trim();
+      const pw2   = (document.getElementById('pw2')?.value  || '').trim();
+  
+      if (pw1 !== pw2) { alert('Passwords do not match.'); return; }
+      if (pw1.length < 8) { alert('Password must be at least 8 characters.'); return; }
+      if (!document.getElementById('tos')?.checked) { alert('You must agree to the Terms.'); return; }
+      if (!email) { alert('Please enter your email.'); return; }
+  
+      const btn = form.querySelector('.btn');
+      const old = btn?.textContent;
+      if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
+  
+      try {
+        await createUserWithEmailAndPassword(auth, email, pw1);
+        window.location.href = 'login.html';
+      } catch (err) {
+        alert(err?.message || 'Signup failed.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = old; }
+      }
     });
-
-    function onGoogleSignIn(){
+  
+    window.onGoogleSignIn = function onGoogleSignIn(response){
       alert('Google sign-in token received. Connect backend to complete login.');
-      localStorage.setItem('userRole','user');
-      window.location.href='login.html';
-    }
+      window.location.href = 'login.html';
+    };
   </script>
 </body>
 </html>
