@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PAYTROLL — KYC Verification</title>
+  <style>
+    :root{
+      --bg1:#0b0817; --bg2:#140b2b; --bg3:#24104a; --bg4:#3b177a; --text:#fff;
+      --glass1:rgba(255,255,255,.12); --glass2:rgba(255,255,255,.08);
+      --border:rgba(255,255,255,.18); --chip:rgba(255,255,255,.12);
+      --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --primary:#2563eb; --primary2:#1d4ed8;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif; color:var(--text);
+      background:
+        radial-gradient(900px 600px at 20% 20%, rgba(109,40,217,.22), transparent 60%),
+        radial-gradient(800px 560px at 80% 80%, rgba(109,40,217,.16), transparent 60%),
+        linear-gradient(135deg,var(--bg1),var(--bg2) 25%,var(--bg3) 55%,var(--bg4) 80%,#000 100%);
+      background-attachment:fixed;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1040px;margin:24px auto 80px;padding:0 16px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px
+    }
+    .back{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;
+      background:var(--chip);border:1px solid var(--border);transition:.2s
+    }
+    .back:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}
+    .status{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;
+      border:1px solid var(--border);background:var(--chip);font-size:13px
+    }
+    .panel{
+      background:linear-gradient(180deg,var(--glass1),var(--glass2));
+      border:1px solid var(--border); border-radius:20px; padding:20px; backdrop-filter:blur(16px);
+      box-shadow:0 20px 80px rgba(0,0,0,.45)
+    }
+    .title{font-size:26px;font-weight:900;margin:0 0 6px}
+    .muted{color:rgba(255,255,255,.78);font-size:14px}
+    .steps{
+      display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0 6px
+    }
+    .step{
+      background:var(--chip);border:1px solid var(--border);border-radius:12px;padding:10px;
+      display:flex;flex-direction:column;gap:6px;min-height:72px;justify-content:center;align-items:flex-start
+    }
+    .step .k{font-weight:800;font-size:12px;opacity:.9}
+    .step .v{font-size:12px;opacity:.85}
+    .step.active{outline:2px solid rgba(37,99,235,.6)}
+    .grid{display:grid;gap:12px}
+    .g2{grid-template-columns:1fr 1fr}
+    .g3{grid-template-columns:1fr 1fr 1fr}
+    @media(max-width:780px){ .g2,.g3{grid-template-columns:1fr} }
+
+    label{font-size:12px;color:#dbeafe;font-weight:700}
+    .input,select,textarea{
+      width:100%;margin-top:6px;background:rgba(255,255,255,.10);border:1px solid var(--border);
+      color:#fff;padding:12px 12px;border-radius:12px;outline:none;font-size:14px
+    }
+    .input:focus,select:focus,textarea:focus{box-shadow:0 0 0 3px rgba(37,99,235,.25)}
+    textarea{min-height:90px;resize:vertical}
+
+    .uploader{
+      border:1px dashed rgba(255,255,255,.35);border-radius:14px;padding:16px;text-align:center;
+      background:rgba(255,255,255,.06)
+    }
+    .uploader.drag{background:rgba(59,130,246,.15);border-color:#60a5fa}
+    .uploader input{display:none}
+    .hint{font-size:12px;color:#cbd5e1;margin-top:6px}
+    .thumb{margin-top:10px;display:flex;gap:10px;align-items:center;justify-content:flex-start;flex-wrap:wrap}
+    .thumb img{width:88px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+    .filepill{font-size:12px;border:1px solid var(--border);background:var(--chip);padding:6px 10px;border-radius:999px}
+
+    .actions{margin-top:16px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+    .btn{
+      appearance:none;border:1px solid var(--border);background:var(--chip);color:#fff;border-radius:12px;
+      padding:12px 16px;font-weight:800;cursor:pointer;transition:.2s
+    }
+    .btn:hover{background:rgba(255,255,255,.16);transform:translateY(-1px)}
+    .btn.primary{border-color:transparent;background:var(--primary)}
+    .btn.primary:hover{background:var(--primary2)}
+    .btn.ghost{background:transparent}
+
+    .banner{
+      display:flex;align-items:center;gap:10px;margin:12px 0;padding:10px 12px;border-radius:12px;
+      border:1px solid var(--border);background:var(--chip);font-size:14px
+    }
+
+    .review{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px
+    }
+    .kv{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:12px;padding:10px}
+    .kv .k{font-size:12px;color:#cbd5e1}
+    .kv .v{font-weight:800;margin-top:4px}
+
+    .center{display:grid;place-items:center;text-align:center;padding:34px 16px}
+    .badge{display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:var(--chip);font-weight:800}
+    .green{color:#10b981;border-color:rgba(16,185,129,.35)}
+    .amber{color:#f59e0b;border-color:rgba(245,158,11,.35)}
+    .red{color:#ef4444;border-color:rgba(239,68,68,.35)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="back" href="dashboard.html">← Back to Dashboard</a>
+      <div id="liveStatus" class="status">Status: <b id="stLabel">Unverified</b></div>
+    </div>
+
+    <!-- MAIN CARD -->
+    <div class="panel">
+      <h1 class="title">KYC Verification</h1>
+      <div class="muted">Takes ~3–5 minutes. We only use this data for verification.</div>
+
+      <!-- Stepper -->
+      <div class="steps" id="steps">
+        <div class="step active"><div class="k">Step 1</div><div class="v">Country & Document</div></div>
+        <div class="step"><div class="k">Step 2</div><div class="v">Personal details</div></div>
+        <div class="step"><div class="k">Step 3</div><div class="v">Address</div></div>
+        <div class="step"><div class="k">Step 4</div><div class="v">ID & Selfie</div></div>
+        <div class="step"><div class="k">Step 5</div><div class="v">Review & Submit</div></div>
+      </div>
+
+      <!-- FORMS -->
+      <form id="kycForm" novalidate>
+        <!-- STEP 1 -->
+        <section data-step="1" class="grid g2">
+          <div>
+            <label>Country</label>
+            <select id="country" required>
+              <option>Bangladesh</option><option>India</option><option>United States</option>
+              <option>United Kingdom</option><option>Saudi Arabia</option><option>United Arab Emirates</option>
+              <option>Germany</option><option>France</option><option>Canada</option><option>Australia</option>
+            </select>
+            <div class="hint">Select your current residence country.</div>
+          </div>
+          <div>
+            <label>Document type</label>
+            <select id="doctype" required>
+              <option value="passport">Passport</option>
+              <option value="nid">National ID</option>
+              <option value="dl">Driving License</option>
+            </select>
+            <div class="hint">Make sure the document is valid & not expired.</div>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section data-step="2" class="grid g3" hidden>
+          <div>
+            <label>Full name</label>
+            <input class="input" id="fullName" placeholder="As per document" required/>
+          </div>
+          <div>
+            <label>Date of birth</label>
+            <input class="input" id="dob" type="date" required/>
+          </div>
+          <div>
+            <label>Nationality</label>
+            <input class="input" id="nation" placeholder="e.g. Bangladeshi" required/>
+          </div>
+          <div>
+            <label>Gender (optional)</label>
+            <select id="gender">
+              <option value="">Prefer not to say</option>
+              <option>Male</option><option>Female</option><option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label>Occupation (optional)</label>
+            <input class="input" id="job" placeholder="e.g. Freelancer"/>
+          </div>
+          <div>
+            <label>PEP / Sanctions</label>
+            <select id="pep" required>
+              <option value="no">No</option>
+              <option value="yes">Yes</option>
+            </select>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section data-step="3" class="grid g2" hidden>
+          <div>
+            <label>Street address</label>
+            <input class="input" id="addr1" placeholder="House, street" required/>
+          </div>
+          <div>
+            <label>City</label>
+            <input class="input" id="city" placeholder="e.g. Dhaka" required/>
+          </div>
+          <div>
+            <label>State/Region</label>
+            <input class="input" id="state" placeholder="e.g. Dhaka"/>
+          </div>
+          <div>
+            <label>Postal code</label>
+            <input class="input" id="zip" placeholder="e.g. 1212" required/>
+          </div>
+          <div>
+            <label>Proof of address (PDF/JPG/PNG ≤10MB)</label>
+            <div id="poaUp" class="uploader">
+              <input id="poa" type="file" accept=".pdf,image/*"/>
+              <div>Drag & drop or <b>click to upload</b></div>
+              <div class="thumb" id="poaThumb"></div>
+            </div>
+            <div class="hint">Bank statement / Utility bill / Tax letter (last 3 months)</div>
+          </div>
+        </section>
+
+        <!-- STEP 4 -->
+        <section data-step="4" class="grid g2" hidden>
+          <div>
+            <label>ID — Front side (JPG/PNG ≤10MB)</label>
+            <div id="idFrontUp" class="uploader">
+              <input id="idFront" type="file" accept="image/*"/>
+              <div>Drag & drop or <b>click to upload</b></div>
+              <div class="thumb" id="idFrontThumb"></div>
+            </div>
+          </div>
+          <div>
+            <label>ID — Back side (JPG/PNG ≤10MB)</label>
+            <div id="idBackUp" class="uploader">
+              <input id="idBack" type="file" accept="image/*"/>
+              <div>Drag & drop or <b>click to upload</b></div>
+              <div class="thumb" id="idBackThumb"></div>
+            </div>
+          </div>
+          <div style="grid-column:1 / -1">
+            <label>Selfie (JPG/PNG ≤10MB)</label>
+            <div id="selfieUp" class="uploader">
+              <input id="selfie" type="file" accept="image/*"/>
+              <div>Drag & drop or <b>click to upload</b></div>
+              <div class="thumb" id="selfieThumb"></div>
+            </div>
+            <div class="hint">Tips: good light, face straight, no glare.</div>
+          </div>
+        </section>
+
+        <!-- STEP 5 -->
+        <section data-step="5" hidden>
+          <div class="banner">Review your data. Sensitive numbers are masked.</div>
+          <div class="review" id="reviewBox"></div>
+          <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px">
+            <input type="checkbox" id="consent" style="width:18px;height:18px;margin-top:2px">
+            <span class="muted">I agree to the Terms, Privacy Policy and consent to my data being processed for verification.</span>
+          </label>
+        </section>
+
+        <div class="actions">
+          <button type="button" class="btn ghost" id="prevBtn">Back</button>
+          <button type="button" class="btn" id="saveBtn">Save draft</button>
+          <button type="button" class="btn primary" id="nextBtn">Next</button>
+          <button type="submit" class="btn primary" id="submitBtn" hidden>Submit for review</button>
+        </div>
+      </form>
+
+      <!-- STATES -->
+      <div id="pendingBox" class="center" hidden>
+        <div class="badge amber">⏳ Pending review</div>
+        <p class="muted" style="margin-top:10px">Usually completed within 24 hours.</p>
+        <div class="actions" style="justify-content:center;margin-top:8px">
+          <a class="btn" href="dashboard.html">Go to Dashboard</a>
+          <button class="btn" id="markVerified">Mark as verified (demo)</button>
+        </div>
+      </div>
+
+      <div id="verifiedBox" class="center" hidden>
+        <div class="badge green">✅ KYC verified</div>
+        <p class="muted" style="margin-top:10px">You’re good to go.</p>
+        <div class="actions" style="justify-content:center;margin-top:8px">
+          <a class="btn primary" href="dashboard.html">Back to Dashboard</a>
+        </div>
+      </div>
+
+      <div id="rejectedBox" class="center" hidden>
+        <div class="badge red">❌ KYC rejected</div>
+        <p class="muted" id="rejReason" style="margin-top:10px">Reason: Photo blurry. Please re-upload.</p>
+        <div class="actions" style="justify-content:center;margin-top:8px">
+          <button class="btn primary" id="retryBtn">Fix & resubmit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- helpers ----------
+    const KYC_KEY='kycStatus';       // used by your dashboard UI
+    const DRAFT_KEY='kycDraft_v1';   // local draft
+
+    const stepsEl=[...document.querySelectorAll('.steps .step')];
+    const sections=[...document.querySelectorAll('[data-step]')];
+    const prevBtn=document.getElementById('prevBtn');
+    const nextBtn=document.getElementById('nextBtn');
+    const saveBtn=document.getElementById('saveBtn');
+    const submitBtn=document.getElementById('submitBtn');
+    const stLabel=document.getElementById('stLabel');
+
+    const pendingBox=document.getElementById('pendingBox');
+    const verifiedBox=document.getElementById('verifiedBox');
+    const rejectedBox=document.getElementById('rejectedBox');
+
+    let cur=1;
+
+    function setStatus(s){
+      localStorage.setItem(KYC_KEY, s);
+      stLabel.textContent = s.charAt(0).toUpperCase()+s.slice(1);
+    }
+    function showFlow(){
+      const s=localStorage.getItem(KYC_KEY)||'unverified';
+      stLabel.textContent=s.charAt(0).toUpperCase()+s.slice(1);
+      const showForm = (s==='unverified' || s==='rejected');
+      document.getElementById('kycForm').style.display = showForm?'block':'none';
+      document.getElementById('steps').style.display = showForm?'grid':'none';
+      pendingBox.hidden = s!=='pending' && s!=='in progress';
+      verifiedBox.hidden = s!=='verified';
+      rejectedBox.hidden = s!=='rejected';
+    }
+
+    function go(n){
+      cur = Math.max(1, Math.min(5, n));
+      sections.forEach(sec=>sec.hidden = +sec.dataset.step!==cur);
+      stepsEl.forEach((s,i)=>s.classList.toggle('active', i===cur-1));
+      prevBtn.disabled = (cur===1);
+      nextBtn.hidden = (cur===5);
+      submitBtn.hidden = (cur!==5);
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    function mask(str){ if(!str) return '—'; return String(str).replace(/.(?=.{4})/g,'*'); }
+
+    function toReview(){
+      const out = {
+        Country: val('#country'),
+        Document: val('#doctype').toUpperCase(),
+        Name: val('#fullName'),
+        DOB: val('#dob'),
+        Nationality: val('#nation'),
+        Address: `${val('#addr1')}, ${val('#city')} ${val('#zip')}`,
+      };
+      const box=document.getElementById('reviewBox');
+      box.innerHTML = Object.entries(out).map(([k,v])=>
+        `<div class="kv"><div class="k">${k}</div><div class="v">${v||'—'}</div></div>`
+      ).join('');
+    }
+
+    function val(sel){const el=document.querySelector(sel);return el?el.value.trim():''}
+    function reqFilled(step){
+      if(step===1) return val('#country') && val('#doctype');
+      if(step===2) return val('#fullName') && val('#dob') && val('#nation') && val('#pep');
+      if(step===3) return val('#addr1') && val('#city') && val('#zip');
+      if(step===4) return filesOK(['#idFront','#idBack','#selfie']);
+      if(step===5) return document.getElementById('consent').checked;
+      return true;
+    }
+
+    function filesOK(ids){
+      for(const id of ids){
+        const f = document.querySelector(id).files[0];
+        if(!f) return false;
+        if(f.size>10*1024*1024) { alert('File too large (max 10MB)'); return false; }
+      }
+      return true;
+    }
+
+    // ---------- uploader (drag/drop + preview) ----------
+    bindUpload('poaUp','poa','poaThumb',true);
+    bindUpload('idFrontUp','idFront','idFrontThumb');
+    bindUpload('idBackUp','idBack','idBackThumb');
+    bindUpload('selfieUp','selfie','selfieThumb');
+
+    function bindUpload(boxId,inputId,thumbId,allowPdf=false){
+      const box=document.getElementById(boxId);
+      const inp=document.getElementById(inputId);
+      const th=document.getElementById(thumbId);
+      if(!box||!inp||!th) return;
+
+      box.addEventListener('click',()=>inp.click());
+      ['dragenter','dragover'].forEach(evn=>box.addEventListener(evn,e=>{
+        e.preventDefault(); e.stopPropagation(); box.classList.add('drag');
+      }));
+      ;['dragleave','drop'].forEach(evn=>box.addEventListener(evn,e=>{
+        e.preventDefault(); e.stopPropagation(); box.classList.remove('drag');
+      }));
+      box.addEventListener('drop',e=>{
+        const file=e.dataTransfer.files[0]; if(file) { inp.files=e.dataTransfer.files; render(); }
+      });
+      inp.addEventListener('change',render);
+
+      function render(){
+        th.innerHTML='';
+        const f=inp.files[0]; if(!f) return;
+        if(f.size>10*1024*1024){ alert('File too large (max 10MB)'); inp.value=''; return; }
+        if(f.type.startsWith('image/')){
+          const img=document.createElement('img');
+          img.src=URL.createObjectURL(f);
+          th.appendChild(img);
+        }else if(allowPdf && f.type==='application/pdf'){
+          const pill=document.createElement('div');
+          pill.className='filepill'; pill.textContent=`📄 ${f.name}`;
+          th.appendChild(pill);
+        }else{
+          alert('Unsupported file type'); inp.value=''; return;
+        }
+      }
+    }
+
+    // ---------- nav buttons ----------
+    prevBtn.addEventListener('click',()=>go(cur-1));
+    nextBtn.addEventListener('click',()=>{
+      if(!reqFilled(cur)){ alert('Please complete this step.'); return; }
+      if(cur===4){ toReview(); }
+      go(cur+1);
+    });
+    saveBtn.addEventListener('click',saveDraft);
+
+    // ---------- submit ----------
+    document.getElementById('kycForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      if(!reqFilled(5)){ alert('Please agree to consent.'); return; }
+      // demo: pretend we called /api/kyc/submit
+      setStatus('pending');
+      showFlow();
+    });
+
+    // ---------- demo actions ----------
+    document.getElementById('markVerified').addEventListener('click',()=>{
+      setStatus('verified');
+      showFlow();
+      setTimeout(()=>location.href='dashboard.html', 600);
+    });
+    document.getElementById('retryBtn').addEventListener('click',()=>{
+      setStatus('unverified');
+      showFlow(); go(1);
+    });
+
+    // ---------- draft ----------
+    function saveDraft(){
+      const data={
+        country:val('#country'),doctype:val('#doctype'),
+        fullName:val('#fullName'),dob:val('#dob'),nation:val('#nation'),
+        gender:val('#gender'),job:val('#job'),pep:val('#pep'),
+        addr1:val('#addr1'),city:val('#city'),state:val('#state'),zip:val('#zip')
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+      toast('Draft saved');
+    }
+    function loadDraft(){
+      try{
+        const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||'{}');
+        if(!d) return;
+        for(const [k,v] of Object.entries(d)){
+          const el=document.getElementById(k); if(el && v!==undefined) el.value=v;
+        }
+      }catch(_){}
+    }
+
+    // tiny toast
+    function toast(msg){
+      const t=document.createElement('div');
+      t.textContent=msg;
+      t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;padding:10px 14px;border-radius:10px;z-index:99';
+      document.body.appendChild(t); setTimeout(()=>t.remove(),1500);
+    }
+
+    // ---------- init ----------
+    (function init(){
+      // Pre-fill name if you saved it earlier
+      const email=localStorage.getItem('userEmail')||'';
+      const nameEl=document.getElementById('fullName');
+      if(nameEl && !nameEl.value && email) nameEl.value = email.split('@')[0].replace(/[._-]/g,' ').replace(/\b\w/g,s=>s.toUpperCase());
+
+      loadDraft();
+      showFlow();
+      if((localStorage.getItem(KYC_KEY)||'unverified')==='unverified'){ go(1); }
+    })();
+  </script>
+</body>
+</html>

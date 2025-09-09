@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PAYTROLL — Customer Service</title>
+  <style>
+    :root{
+      --bg1:#0b0817; --bg2:#140b2b; --bg3:#24104a; --bg4:#3b177a;
+      --glass:rgba(255,255,255,.10); --glass2:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.16); --text:#fff;
+      --ok:#10b981; --warn:#f59e0b; --err:#ef4444; --info:#60a5fa;
+      --chip:#cbd5e1; --muted:rgba(255,255,255,.75);
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif;
+      background:
+        radial-gradient(900px 600px at 20% 20%, rgba(109,40,217,.22), transparent 60%),
+        radial-gradient(800px 560px at 80% 80%, rgba(109,40,217,.16), transparent 60%),
+        linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 25%,var(--bg3) 55%,var(--bg4) 80%, #000 100%);
+      background-attachment:fixed;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1250px;margin:24px auto 80px;padding:0 18px}
+    .topbar{
+      display:flex;align-items:center;gap:12px;margin-bottom:14px
+    }
+    .logo{font-weight:900;letter-spacing:1px}
+    .ghost{
+      background:var(--glass);border:1px solid var(--border);padding:10px 12px;border-radius:12px;
+      display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:.2s
+    }
+    .ghost:hover{background:rgba(255,255,255,.14);transform:translateY(-1px)}
+    .status{
+      margin-left:auto; font-size:12px; padding:8px 10px; border-radius:999px; border:1px solid var(--border);
+      background:rgba(16,185,129,.15); color:#d1fae5; display:flex; align-items:center; gap:8px
+    }
+    .grid{
+      display:grid; grid-template-columns:320px 1fr; gap:16px; align-items:start
+    }
+    .card{
+      background:linear-gradient(180deg,var(--glass),var(--glass2)); border:1px solid var(--border);
+      border-radius:18px; padding:16px; backdrop-filter:blur(14px) saturate(120%); box-shadow:0 18px 55px rgba(0,0,0,.35)
+    }
+    .search{width:360px;max-width:60vw;background:rgba(255,255,255,.08);border:1px solid var(--border);
+      color:#fff;padding:11px 12px;border-radius:12px;outline:none}
+    .filters{display:grid;gap:10px;margin-top:10px}
+    select{width:100%;background:rgba(255,255,255,.08);border:1px solid var(--border);color:#fff;padding:10px;border-radius:10px;outline:none}
+    .list{margin-top:10px;display:grid;gap:10px;max-height:58vh;overflow:auto;padding-right:4px}
+    .ticket{
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08); border-radius:14px;
+      padding:10px 12px; display:grid; gap:6px; cursor:pointer; transition:.2s
+    }
+    .ticket:hover{background:rgba(255,255,255,.12); transform:translateY(-2px)}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .badge{font-size:11px;padding:5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);white-space:nowrap}
+    .st-open{background:rgba(96,165,250,.16);border-color:#60a5fa;color:#dbeafe}
+    .st-pending{background:rgba(245,158,11,.16);border-color:#f59e0b;color:#fef3c7}
+    .st-resolved{background:rgba(16,185,129,.16);border-color:#10b981;color:#d1fae5}
+    .pr-high{background:rgba(239,68,68,.16);border-color:#ef4444;color:#fee2e2}
+    .muted{color:var(--muted);font-size:12px}
+    .ttl{font-weight:800}
+    /* detail */
+    .detail{display:grid;grid-template-rows:auto 1fr auto;gap:10px;min-height:64vh}
+    .head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .msgs{border:1px dashed rgba(255,255,255,.18); border-radius:14px; padding:12px; overflow:auto}
+    .msg{display:flex;gap:10px;margin:8px 0}
+    .bubble{
+      max-width:68%; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.08)
+    }
+    .from-agent .bubble{background:rgba(96,165,250,.12);border-color:#60a5fa}
+    .from-user .bubble{background:rgba(168,85,247,.12);border-color:#a855f7}
+    .meta{font-size:11px;opacity:.8;margin-top:4px}
+    .typing{font-size:12px;color:#cbd5e1;display:none}
+    .reply{display:flex;gap:8px;align-items:flex-start}
+    textarea{flex:1;min-height:62px;resize:vertical;background:rgba(255,255,255,.08);border:1px solid var(--border);
+      color:#fff;padding:10px;border-radius:10px;outline:none}
+    .small{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.10);color:#fff;cursor:pointer}
+    .small:hover{background:rgba(255,255,255,.16)}
+    .danger{border-color:#ef4444}
+    .primary{border-color:#60a5fa}
+    .ok{border-color:#10b981}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+    .sla{font-size:12px;color:#dbeafe}
+    .hint{font-size:12px;color:#cbd5e1}
+    /* sheet (new ticket) */
+    .sheet{position:fixed;inset:0;display:none;place-items:center;background:rgba(10,12,20,.45);backdrop-filter:blur(8px);z-index:60}
+    .panel{width:min(560px,92vw);background:linear-gradient(180deg,var(--glass),var(--glass2));
+      border:1px solid var(--border);border-radius:18px;padding:16px;position:relative}
+    .panel h3{margin:0 0 6px}
+    .x{position:absolute;top:10px;right:10px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .form-grid>div{display:flex;flex-direction:column;gap:6px}
+    .panel input,.panel select,.panel textarea{
+      background:rgba(255,255,255,.08);border:1px solid var(--border);color:#fff;padding:10px;border-radius:10px;outline:none
+    }
+    .panel textarea{min-height:90px}
+    .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+    /* FAQs */
+    .faq{margin-top:12px}
+    .faq h4{margin:0 0 8px}
+    .acc{border:1px solid var(--border);border-radius:12px;overflow:hidden}
+    .acc details{background:rgba(255,255,255,.06);border-bottom:1px solid rgba(255,255,255,.10)}
+    .acc details:last-child{border-bottom:0}
+    .acc summary{padding:10px 12px;cursor:pointer;list-style:none}
+    .acc p{padding:0 12px 12px;margin:0;color:#dbeafe;font-size:14px}
+    /* toast */
+    .toast{position:fixed;bottom:18px;right:18px;background:#111827;color:#fff;border:1px solid #374151;padding:10px 14px;border-radius:10px;display:none;z-index:80}
+    .sr{position:absolute;left:-9999px}
+    @media(max-width:1024px){
+      .grid{grid-template-columns:1fr}
+      .search{width:100%}
+      .msgs{max-height:40vh}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="logo">PAYTROLL</div>
+      <a class="ghost" href="dashboard.html">← Back to Dashboard</a>
+      <input id="q" class="search" type="search" placeholder="Search tickets or FAQs…"/>
+      <button id="newBtn" class="ghost">➕ New Ticket</button>
+      <div class="status">🟢 All systems operational</div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: Filters + Inbox + FAQs -->
+      <div class="card">
+        <div class="ttl">Inbox</div>
+        <div class="filters">
+          <select id="fStatus">
+            <option value="">Status: All</option>
+            <option>Open</option><option>Pending</option><option>Resolved</option>
+          </select>
+          <select id="fCat">
+            <option value="">Category: All</option>
+            <option>Payments</option><option>Withdraw</option><option>Deposit</option>
+            <option>Account</option><option>KYC</option><option>Security</option>
+          </select>
+          <select id="fPri">
+            <option value="">Priority: All</option>
+            <option>Normal</option><option>High</option><option>Urgent</option>
+          </select>
+        </div>
+
+        <div id="list" class="list" aria-label="Ticket list"></div>
+
+        <div class="faq">
+          <h4>Help Centre</h4>
+          <div class="acc" id="faqBox">
+            <details><summary>How do I verify my account (KYC)?</summary><p>Open KYC page, upload NID/Passport and a selfie. Review usually within 24h.</p></details>
+            <details><summary>Why is my withdrawal pending?</summary><p>Bank transfers may take 1–3 business days. Check Withdraw History for status.</p></details>
+            <details><summary>How to report a suspicious transaction?</summary><p>Create a ticket: Issue type → Security, add Tx ID & details. We’ll lock it down.</p></details>
+            <details><summary>What are the fees & limits?</summary><p>Send 1.4%, Withdraw 2%. Limits depend on KYC tier. See Limits in Settings.</p></details>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Details -->
+      <div class="card detail" id="detail">
+        <div class="head">
+          <div>
+            <div class="ttl" id="dTitle">Select a ticket</div>
+            <div class="hint"><span id="dId">—</span> • <span id="dTime">—</span> • <span id="dTz"></span></div>
+          </div>
+          <div class="chips">
+            <span id="dStatus" class="badge">—</span>
+            <span id="dPri" class="badge">—</span>
+            <span id="sla" class="sla badge st-open">SLA 24h</span>
+          </div>
+        </div>
+
+        <div class="msgs" id="msgs" aria-live="polite">
+          <div class="muted">No ticket selected.</div>
+        </div>
+
+        <div>
+          <div class="typing" id="typing">Agent is typing…</div>
+          <div class="toolbar" style="margin:8px 0 10px">
+            <button id="esc" class="small primary">Escalate to agent</button>
+            <button id="closeT" class="small ok">Close ticket</button>
+            <button id="exportT" class="small">Export transcript</button>
+          </div>
+          <div class="reply">
+            <textarea id="replyBox" placeholder="Type your message…"></textarea>
+            <input id="file" type="file" multiple class="sr" />
+            <button id="attach" class="small">📎</button>
+            <button id="send" class="small primary">Send</button>
+          </div>
+          <div class="hint" id="attachHint"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Ticket Sheet -->
+  <div id="sheet" class="sheet" role="dialog" aria-modal="true">
+    <div class="panel">
+      <button class="small x" id="closeSheet">✕</button>
+      <h3>New ticket</h3>
+      <div class="hint">We’ll respond ASAP. Your timezone: <span id="tzHere"></span></div>
+      <div class="form-grid" style="margin-top:8px">
+        <div>
+          <label>Issue type</label>
+          <select id="iType">
+            <option>Payments</option><option>Withdraw</option><option>Deposit</option>
+            <option>Account</option><option>KYC</option><option>Security</option>
+          </select>
+        </div>
+        <div>
+          <label>Priority</label>
+          <select id="iPri">
+            <option>Normal</option><option>High</option><option>Urgent</option>
+          </select>
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Subject</label>
+          <input id="iSub" placeholder="Short summary e.g. Withdrawal delay">
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Description</label>
+          <textarea id="iDesc" placeholder="Describe the issue"></textarea>
+        </div>
+        <div>
+          <label>Transaction ID (optional)</label>
+          <input id="iTx" placeholder="e.g. TX-12345">
+        </div>
+        <div>
+          <label>Amount (optional)</label>
+          <input id="iAmt" type="number" step="0.01" placeholder="0.00">
+        </div>
+        <div>
+          <label>Currency</label>
+          <select id="iCcy"><option>USD</option><option>EUR</option><option>GBP</option><option>SAR</option></select>
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Attachments</label>
+          <input id="iFiles" type="file" multiple>
+          <div class="hint">jpg/png/pdf • ≤5MB each • max 3</div>
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Preferred contact</label>
+          <select id="iContact"><option>Email</option><option>Phone</option><option>Chat</option></select>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="small" id="cancelNew">Cancel</button>
+        <button class="small primary" id="createNew">Create ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    /* ==== Utils ==== */
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    $('#dTz').textContent = TZ;
+    $('#tzHere').textContent = TZ;
+
+    const LS_KEY = 'pt_tickets';
+    const userId = localStorage.getItem('userId') || '9876543210';
+
+    const nowISO = () => new Date().toISOString();
+    const fmtTime = iso => new Date(iso).toLocaleString();
+    const idGen = () => 'T' + Math.random().toString(36).slice(2,8).toUpperCase();
+
+    const toast = (msg) => {
+      if (window.pushNotif) { try{ pushNotif('Customer Service', msg);}catch{} }
+      const t = $('#toast'); t.textContent = msg; t.style.display='block';
+      setTimeout(()=> t.style.display='none', 1800);
+    };
+
+    /* ==== Storage ==== */
+    function loadTickets(){
+      try{
+        const arr = JSON.parse(localStorage.getItem(LS_KEY)||'[]');
+        if(Array.isArray(arr)) return arr;
+      }catch(_){}
+      return [];
+    }
+    function saveTickets(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); }
+
+    /* Seed demo */
+    let tickets = loadTickets();
+    if(tickets.length===0){
+      tickets = [
+        {
+          id:idGen(), subject:'Withdrawal pending', category:'Withdraw', priority:'High',
+          status:'Open', userId, createdAt:nowISO(), updatedAt:nowISO(),
+          messages:[
+            {from:'user', text:'My EUR withdrawal is pending for 2 days.', time:nowISO()},
+            {from:'agent', text:'Thanks! Please share bank name & last 4 of acct.', time:nowISO()}
+          ]
+        },
+        {
+          id:idGen(), subject:'KYC selfie rejected', category:'KYC', priority:'Normal',
+          status:'Pending', userId, createdAt:nowISO(), updatedAt:nowISO(),
+          messages:[{from:'user', text:'Selfie got rejected, what should I re-upload?', time:nowISO()}]
+        }
+      ];
+      saveTickets(tickets);
+    }
+
+    /* ==== Rendering Inbox ==== */
+    const listEl = $('#list');
+    const fStatus = $('#fStatus'), fCat = $('#fCat'), fPri = $('#fPri'), q = $('#q');
+
+    function badgeCls(status){
+      if(status==='Open') return 'badge st-open';
+      if(status==='Pending') return 'badge st-pending';
+      if(status==='Resolved') return 'badge st-resolved';
+      return 'badge';
+    }
+
+    function renderList(){
+      const term = (q.value||'').toLowerCase();
+      const st = fStatus.value, cat=fCat.value, pri=fPri.value;
+
+      const filtered = tickets.filter(t=>{
+        const hit = t.subject.toLowerCase().includes(term) ||
+                    (t.messages?.some(m=>m.text.toLowerCase().includes(term)));
+        const okSt = !st || t.status===st;
+        const okCat = !cat || t.category===cat;
+        const okPri = !pri || t.priority===pri;
+        return hit && okSt && okCat && okPri;
+      }).sort((a,b)=> new Date(b.updatedAt) - new Date(a.updatedAt));
+
+      if(filtered.length===0){
+        listEl.innerHTML = `<div class="muted">No tickets.</div>`;
+        return;
+      }
+      listEl.innerHTML = filtered.map(t=>`
+        <div class="ticket" data-id="${t.id}">
+          <div class="row">
+            <div class="ttl" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.subject}</div>
+            <span class="${badgeCls(t.status)}">${t.status}</span>
+          </div>
+          <div class="row">
+            <div class="muted">${t.category} • ${t.priority}</div>
+            <div class="muted">${new Date(t.updatedAt).toLocaleDateString()} ${new Date(t.updatedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    [fStatus,fCat,fPri,q].forEach(el=> el.addEventListener('input', renderList));
+    renderList();
+
+    /* ==== Details & Actions ==== */
+    let activeId = null;
+
+    function setHeader(t){
+      $('#dTitle').textContent = t.subject;
+      $('#dId').textContent = t.id;
+      $('#dTime').textContent = `Opened ${new Date(t.createdAt).toLocaleString()}`;
+      const ds = $('#dStatus'); ds.textContent = t.status; ds.className = badgeCls(t.status);
+      const dp = $('#dPri'); dp.textContent = t.priority; dp.className='badge';
+      updateSLA(t);
+    }
+
+    function renderMsgs(t){
+      const box = $('#msgs');
+      box.innerHTML = t.messages.map(m=>`
+        <div class="msg from-${m.from}">
+          <div class="bubble">
+            <div>${escapeHtml(m.text).replace(/\n/g,'<br>')}</div>
+            ${m.files?.length? `<div class="meta">📎 ${m.files.map(f=>escapeHtml(f.name)).join(', ')}</div>`:''}
+            <div class="meta">${new Date(m.time).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m])); }
+
+    function pick(id){ activeId=id; const t = tickets.find(x=>x.id===id); if(!t) return;
+      setHeader(t); renderMsgs(t);
+    }
+
+    listEl.addEventListener('click', e=>{
+      const card = e.target.closest('.ticket'); if(!card) return;
+      pick(card.dataset.id);
+    });
+
+    function updateTicket(id, mut){
+      const i = tickets.findIndex(t=>t.id===id); if(i<0) return;
+      tickets[i] = {...tickets[i], ...mut, updatedAt: nowISO()};
+      saveTickets(tickets); renderList(); pick(id);
+    }
+
+    function addMessage(id, msg){
+      const i = tickets.findIndex(t=>t.id===id); if(i<0) return;
+      tickets[i].messages.push(msg);
+      tickets[i].updatedAt = nowISO();
+      saveTickets(tickets); renderMsgs(tickets[i]); renderList();
+    }
+
+    /* Reply, Attach, Escalate, Close, Export */
+    const fileInput = $('#file'), attach = $('#attach'), attachHint = $('#attachHint');
+    let pendingFiles = [];
+    attach.addEventListener('click', ()=> fileInput.click());
+    fileInput.addEventListener('change', ()=>{
+      pendingFiles = Array.from(fileInput.files||[]).slice(0,3);
+      if(pendingFiles.length>0){
+        attachHint.textContent = `Ready to attach: ${pendingFiles.map(f=>f.name).join(', ')}`;
+      }else{ attachHint.textContent=''; }
+    });
+
+    $('#send').addEventListener('click', ()=>{
+      if(!activeId){ toast('Select a ticket first'); return; }
+      const txt = ($('#replyBox').value||'').trim();
+      if(!txt && pendingFiles.length===0){ toast('Type a message'); return; }
+      addMessage(activeId, {from:'user', text:txt, time:nowISO(), files:pendingFiles});
+      $('#replyBox').value=''; pendingFiles=[]; fileInput.value=''; attachHint.textContent='';
+      updateTicket(activeId, {}); // refresh timestamps
+      simulateAutoReply(activeId, txt);
+    });
+
+    $('#esc').addEventListener('click', ()=>{
+      if(!activeId) return;
+      updateTicket(activeId, {status:'Pending'});
+      toast('Escalated to live agent');
+      simulateTyping(() => {
+        addMessage(activeId, {from:'agent', text:'Agent joined. How can I help further?', time:nowISO()});
+      });
+    });
+
+    $('#closeT').addEventListener('click', ()=>{
+      if(!activeId) return;
+      updateTicket(activeId, {status:'Resolved'});
+      setTimeout(()=>{
+        const rate = prompt('Rate support (1–5 stars):','5');
+        if(rate) addMessage(activeId, {from:'agent', text:`Thanks for the ${'⭐'.repeat(Math.max(1,Math.min(5,parseInt(rate)||5)))} rating!`, time:nowISO()});
+      }, 100);
+    });
+
+    $('#exportT').addEventListener('click', ()=>{
+      if(!activeId) return;
+      const t = tickets.find(x=>x.id===activeId);
+      const text = [
+        `PAYTROLL — Ticket ${t.id}`,
+        `Subject: ${t.subject}`,
+        `Category: ${t.category} | Priority: ${t.priority} | Status: ${t.status}`,
+        `Opened: ${fmtTime(t.createdAt)} (${TZ})`,
+        `--- Transcript ---`,
+        ...t.messages.map(m=>`[${fmtTime(m.time)}] ${m.from.toUpperCase()}: ${m.text}`)
+      ].join('\n');
+      const blob = new Blob([text], {type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download=`ticket-${t.id}.txt`; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    /* Typing & smart bot */
+    function simulateTyping(cb){
+      const t = $('#typing'); t.style.display='block';
+      setTimeout(()=>{ t.style.display='none'; cb&&cb(); }, 1100);
+    }
+    function simulateAutoReply(id, txt){
+      const lower = txt.toLowerCase();
+      let reply = '';
+      if(lower.includes('kyc')) reply = 'Please ensure your document is clear and matches your profile name.';
+      else if(lower.includes('withdraw')) reply = 'Withdrawals may take 1–3 business days depending on bank.';
+      else if(lower.includes('deposit')) reply = 'Card deposits show instantly; bank transfers can take longer.';
+      else if(lower.includes('fee')||lower.includes('limit')) reply = 'Send 1.4%, Withdraw 2%. Higher KYC = higher limits.';
+      else reply = 'Thanks! We are reviewing and will update shortly.';
+      simulateTyping(()=> addMessage(id, {from:'agent', text:reply, time:nowISO()}));
+    }
+
+    /* SLA 24h countdown */
+    let slaTimer = null;
+    function updateSLA(t){
+      clearInterval(slaTimer);
+      const slaEl = $('#sla');
+      const start = new Date(t.createdAt).getTime();
+      const target = start + 24*60*60*1000;
+      function tick(){
+        const left = Math.max(0, target - Date.now());
+        const h = Math.floor(left/3_600_000);
+        const m = Math.floor((left%3_600_000)/60_000);
+        slaEl.textContent = left ? `SLA ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m` : 'SLA met';
+      }
+      tick(); slaTimer = setInterval(tick, 30_000);
+    }
+
+    /* ==== New Ticket ==== */
+    const sheet = $('#sheet');
+    $('#newBtn').addEventListener('click', ()=> sheet.style.display='grid');
+    $('#closeSheet').addEventListener('click', ()=> sheet.style.display='none');
+    $('#cancelNew').addEventListener('click', ()=> sheet.style.display='none');
+    sheet.addEventListener('click', e=>{ if(e.target===sheet) sheet.style.display='none'; });
+
+    $('#createNew').addEventListener('click', ()=>{
+      const sub = ($('#iSub').value||'').trim();
+      const desc = ($('#iDesc').value||'').trim();
+      if(!sub || !desc){ toast('Subject & Description required'); return; }
+      const t = {
+        id:idGen(),
+        subject: sub,
+        category: $('#iType').value,
+        priority: $('#iPri').value,
+        status:'Open',
+        userId, createdAt: nowISO(), updatedAt: nowISO(),
+        txId: ($('#iTx').value||'').trim(),
+        amount: parseFloat($('#iAmt').value||'0')||0,
+        currency: $('#iCcy').value,
+        messages: [{from:'user', text:desc, time:nowISO()}]
+      };
+      // attachments (names only for demo)
+      const files = Array.from($('#iFiles').files||[]).slice(0,3);
+      if(files.length) t.messages[0].files = files.map(f=>({name:f.name,size:f.size}));
+
+      tickets.unshift(t); saveTickets(tickets);
+      sheet.style.display='none'; renderList(); pick(t.id);
+      toast('Ticket created');
+      try{ if(window.pushNotif) pushNotif('New support ticket', sub); }catch{}
+    });
+
+    // Restore last active on load
+    if(tickets[0]) pick(tickets[0].id);
+  </script>
+</body>
+</html>

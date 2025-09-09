@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PAYTROLL — Settings</title>
+  <style>
+    :root{
+      --bg1:#0b0817; --bg2:#140b2b; --bg3:#24104a; --bg4:#3b177a;
+      --glass:rgba(255,255,255,.10); --glass2:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.16); --txt:#fff; --muted:#cbd5e1;
+      --primary:#2563eb; --primary2:#1d4ed8; --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444;
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif;
+      background:
+        radial-gradient(900px 600px at 20% 20%, rgba(109,40,217,.22), transparent 60%),
+        radial-gradient(800px 560px at 80% 80%, rgba(109,40,217,.16), transparent 60%),
+        linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 25%,var(--bg3) 55%,var(--bg4) 80%,#000 100%);
+      background-attachment:fixed;
+    }
+    a{color:inherit;text-decoration:none}
+
+    /* Header */
+    .topbar{
+      position:sticky; top:0; z-index:30;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      padding:14px 18px; border-bottom:1px solid var(--border);
+      backdrop-filter:saturate(130%) blur(10px); background:rgba(10,12,20,.35);
+    }
+    .brand{font-weight:900; letter-spacing:1px}
+    .top-actions{display:flex; gap:10px}
+    .btn{border:1px solid var(--border); background:var(--glass); color:#fff; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; transition:.2s}
+    .btn:hover{background:rgba(255,255,255,.14); transform:translateY(-1px)}
+    .btn.primary{border-color:rgba(37,99,235,.5); background:linear-gradient(135deg,#2563eb,#1d4ed8)}
+    .btn.primary:hover{filter:brightness(1.05)}
+    .btn.ghost{background:transparent}
+    .btn.icon{display:inline-grid; place-items:center; width:42px; height:42px; padding:0}
+
+    /* Layout */
+    .wrap{max-width:1200px; margin:18px auto 80px; padding:0 18px; display:grid; grid-template-columns:260px 1fr; gap:18px}
+    @media (max-width:960px){ .wrap{grid-template-columns:1fr} }
+
+    /* Sidebar */
+    .side{
+      position:sticky; top:76px;
+      background:var(--glass); border:1px solid var(--border); border-radius:var(--radius);
+      padding:14px; height:max-content; backdrop-filter:blur(14px) saturate(120%);
+    }
+    .side h4{margin:4px 8px 10px; font-size:12px; color:var(--muted); letter-spacing:.6px; text-transform:uppercase}
+    .nav{display:flex; flex-direction:column; gap:6px}
+    .nav a{
+      padding:10px 12px; border-radius:12px; color:#e5e7eb; display:flex; align-items:center; gap:10px; border:1px solid transparent;
+    }
+    .nav a.active, .nav a:hover{background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.18); color:#fff}
+
+    /* Panels */
+    .panel{
+      background:var(--glass); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px; backdrop-filter:blur(14px) saturate(120%); overflow:hidden;
+    }
+    .panel+.panel{margin-top:18px}
+    .panel header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px}
+    .panel h2{font-size:18px; margin:0}
+    .sub{color:var(--muted); font-size:12px}
+
+    /* Forms */
+    .grid{display:grid; gap:12px}
+    .twocol{grid-template-columns:1fr 1fr}
+    .threecol{grid-template-columns:1fr 1fr 1fr}
+    @media(max-width:720px){ .twocol,.threecol{grid-template-columns:1fr} }
+    label{font-size:12px; color:#cbd5e1; font-weight:700}
+    .input, select, textarea{
+      width:100%; margin-top:6px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+      color:#fff; border-radius:12px; padding:12px; outline:none; transition:.2s; font-size:14px
+    }
+    .input:focus, select:focus, textarea:focus{box-shadow:0 0 0 3px rgba(37,99,235,.25); border-color:#2563eb}
+    .row{display:flex; gap:10px; align-items:center}
+    .hint{font-size:11px; color:#9ca3af}
+
+    .switch{position:relative; width:46px; height:26px; background:rgba(255,255,255,.18); border-radius:999px; cursor:pointer; border:1px solid rgba(255,255,255,.25)}
+    .switch::after{content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:.2s}
+    .switch[aria-checked="true"]{background:linear-gradient(135deg,#22c55e,#16a34a)}
+    .switch[aria-checked="true"]::after{left:23px}
+
+    /* Avatar */
+    .avatar-wrap{display:flex; align-items:center; gap:14px}
+    .avatar{
+      width:80px; height:80px; border-radius:50%; position:relative; overflow:hidden; border:2px solid rgba(255,255,255,.25);
+      background:linear-gradient(135deg,#1f2937,#0b1220); display:grid; place-items:center;
+    }
+    .avatar img{width:100%; height:100%; object-fit:cover}
+    .cam{
+      position:absolute; right:2px; bottom:2px; width:32px; height:32px; border-radius:50%;
+      display:grid; place-items:center; background:linear-gradient(135deg,#2563eb,#1d4ed8); border:1px solid rgba(255,255,255,.25); cursor:pointer
+    }
+    .cam svg{width:18px; height:18px}
+
+    /* Section footer */
+    .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:8px}
+    .danger{background:rgba(239,68,68,.14); border-color:rgba(239,68,68,.4)}
+    .danger:hover{background:rgba(239,68,68,.22)}
+
+    /* Toast */
+    .toast{
+      position:fixed; right:18px; bottom:18px; background:rgba(10,12,20,.8);
+      color:#fff; border:1px solid var(--border); padding:12px 14px; border-radius:12px; opacity:0; transform:translateY(8px);
+      box-shadow:0 10px 28px rgba(0,0,0,.45); transition:.25s; z-index:50
+    }
+    .toast.show{opacity:1; transform:translateY(0)}
+
+    /* Section marker highlight */
+    .anchor-highlight{box-shadow:0 0 0 2px rgba(37,99,235,.45) inset}
+  </style>
+</head>
+<body>
+  <!-- Top -->
+  <div class="topbar">
+    <div class="brand">PAYTROLL — Settings</div>
+    <div class="top-actions">
+      <a href="dashboard.html" class="btn ghost">← Back to Dashboard</a>
+      <a href="logout.html" class="btn">Logout</a>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- Sidebar -->
+    <aside class="side">
+      <h4>Settings</h4>
+      <nav class="nav" id="sideNav">
+        <a href="#account" class="active">Account</a>
+        <a href="#contact">Contact</a>
+        <a href="#security">Security</a>
+        <a href="#notifications">Notifications</a>
+        <a href="#language">Language & Region</a>
+        <a href="#appearance">Appearance</a>
+        <a href="#data">Privacy & Data</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <main id="content">
+
+      <!-- Account -->
+      <section id="account" class="panel">
+        <header>
+          <div>
+            <h2>Account</h2>
+            <div class="sub">Basic profile details</div>
+          </div>
+        </header>
+
+        <div class="avatar-wrap" style="margin-bottom:12px">
+          <div class="avatar" id="avatarBox">
+            <img id="avatarImg" alt="Avatar" src="" style="display:none">
+            <div id="avatarFallback" aria-hidden="true" style="font-weight:900; opacity:.85">👤</div>
+            <button class="cam" id="avatarBtn" title="Change photo" aria-label="Change photo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l2-3h8l2 3h3a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+            </button>
+            <input id="avatarInput" type="file" accept="image/*" hidden>
+          </div>
+          <div class="hint">Click the camera icon to upload/change your photo.</div>
+        </div>
+
+        <div class="grid twocol">
+          <label>First name
+            <input id="firstName" class="input" placeholder="First name">
+          </label>
+          <label>Last name
+            <input id="lastName" class="input" placeholder="Last name">
+          </label>
+          <label>Display name
+            <input id="displayName" class="input" placeholder="How others see you">
+          </label>
+          <label>Date of birth (optional)
+            <input id="dob" class="input" type="date">
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn danger" id="deleteAccount">Delete Account</button>
+          <button class="btn primary" data-save="account">Save changes</button>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section id="contact" class="panel">
+        <header>
+          <div>
+            <h2>Contact</h2>
+            <div class="sub">Email & phone (verification supported)</div>
+          </div>
+        </header>
+        <div class="grid twocol">
+          <label>Email
+            <input id="email" class="input" type="email" placeholder="you@example.com">
+          </label>
+          <div class="row" style="align-items:end">
+            <div class="hint">We’ll send a verification link when changed.</div>
+            <button class="btn" id="verifyEmail">Send verification</button>
+          </div>
+
+          <label>Phone number
+            <input id="phone" class="input" inputmode="tel" placeholder="+8801XXXXXXXXX">
+          </label>
+          <div class="row" style="align-items:end">
+            <div class="hint">SMS OTP required to confirm.</div>
+            <button class="btn" id="verifyPhone">Send OTP</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" data-save="contact">Save changes</button>
+        </div>
+      </section>
+
+      <!-- Security -->
+      <section id="security" class="panel">
+        <header>
+          <div>
+            <h2>Security</h2>
+            <div class="sub">Password & 2-step verification</div>
+          </div>
+        </header>
+
+        <div class="grid twocol">
+          <label>Change password
+            <div class="row">
+              <a href="settings.html#security" id="goPassword" class="btn">Open password dialog</a>
+              <span class="hint">For demo, this just shows a toast. In production, open a modal.</span>
+            </div>
+          </label>
+
+          <label>Two-factor authentication
+            <div class="row">
+              <div id="twofa" class="switch" role="switch" aria-checked="false" tabindex="0"></div>
+              <div class="hint">Use Authenticator app or SMS.</div>
+            </div>
+          </label>
+
+          <label>Login alerts
+            <div class="row">
+              <div id="loginAlerts" class="switch" role="switch" aria-checked="true" tabindex="0"></div>
+              <div class="hint">Get notified on new device/location.</div>
+            </div>
+          </label>
+
+          <label>Active sessions
+            <div class="row" style="flex-wrap:wrap">
+              <span class="badge" style="border:1px solid var(--border); padding:8px 10px; border-radius:10px">Chrome • Dhaka • Now</span>
+              <span class="badge" style="border:1px solid var(--border); padding:8px 10px; border-radius:10px">Safari • iPhone • 2d ago</span>
+              <button class="btn" id="revokeOthers">Sign out others</button>
+            </div>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" data-save="security">Save changes</button>
+        </div>
+      </section>
+
+      <!-- Notifications -->
+      <section id="notifications" class="panel">
+        <header>
+          <div>
+            <h2>Notifications</h2>
+            <div class="sub">Choose channels & categories</div>
+          </div>
+        </header>
+
+        <div class="grid threecol">
+          <label>Email
+            <div class="row"><div id="nEmail" class="switch" role="switch" aria-checked="true" tabindex="0"></div></div>
+          </label>
+          <label>SMS
+            <div class="row"><div id="nSms" class="switch" role="switch" aria-checked="false" tabindex="0"></div></div>
+          </label>
+          <label>Push
+            <div class="row"><div id="nPush" class="switch" role="switch" aria-checked="true" tabindex="0"></div></div>
+          </label>
+        </div>
+
+        <div class="grid twocol" style="margin-top:8px">
+          <label>Transaction alerts
+            <div class="row"><div id="cTx" class="switch" role="switch" aria-checked="true" tabindex="0"></div></div>
+          </label>
+          <label>Requests & payouts
+            <div class="row"><div id="cReq" class="switch" role="switch" aria-checked="true" tabindex="0"></div></div>
+          </label>
+          <label>Security & login
+            <div class="row"><div id="cSec" class="switch" role="switch" aria-checked="true" tabindex="0"></div></div>
+          </label>
+          <label>Promotions
+            <div class="row"><div id="cPromo" class="switch" role="switch" aria-checked="false" tabindex="0"></div></div>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" data-save="notifications">Save changes</button>
+        </div>
+      </section>
+
+      <!-- Language & Region -->
+      <section id="language" class="panel">
+        <header>
+          <div>
+            <h2>Language & Region</h2>
+            <div class="sub">Language, time zone, formats</div>
+          </div>
+        </header>
+
+        <div class="grid twocol">
+          <label>Language
+            <select id="langSel">
+              <option value="en">English</option>
+              <option value="bn">বাংলা (Bangla)</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+              <option value="ur">اردو (Urdu)</option>
+              <option value="ar">العربية (Arabic)</option>
+              <option value="zh-Hans">中文 (简体)</option>
+              <option value="zh-Hant">中文 (繁體)</option>
+              <option value="ja">日本語 (Japanese)</option>
+              <option value="ko">한국어 (Korean)</option>
+              <option value="fr">Français</option>
+              <option value="de">Deutsch</option>
+              <option value="es">Español</option>
+              <option value="pt">Português</option>
+              <option value="it">Italiano</option>
+              <option value="ru">Русский</option>
+              <option value="tr">Türkçe</option>
+              <option value="vi">Tiếng Việt</option>
+              <option value="th">ไทย</option>
+              <option value="ms">Bahasa Melayu</option>
+              <option value="id">Bahasa Indonesia</option>
+              <option value="fa">فارسی</option>
+              <option value="nl">Nederlands</option>
+              <option value="sv">Svenska</option>
+              <option value="no">Norsk</option>
+              <option value="da">Dansk</option>
+              <option value="fi">Suomi</option>
+              <option value="pl">Polski</option>
+              <option value="ro">Română</option>
+              <option value="cs">Čeština</option>
+              <option value="el">Ελληνικά</option>
+              <option value="he">עברית</option>
+            </select>
+          </label>
+
+          <label>Region format
+            <select id="regionFmt">
+              <option value="US">United States (MM/DD/YYYY)</option>
+              <option value="GB">United Kingdom (DD/MM/YYYY)</option>
+              <option value="EU">Europe (DD.MM.YYYY)</option>
+              <option value="IN">India (DD-MM-YYYY)</option>
+              <option value="BD">Bangladesh (DD-MM-YYYY)</option>
+            </select>
+          </label>
+
+          <label class="row">Auto detect time zone
+            <div id="tzAuto" class="switch" role="switch" aria-checked="true" tabindex="0"></div>
+          </label>
+
+          <label>Time zone
+            <select id="tzSel" disabled></select>
+            <div class="hint" id="tzHint"></div>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" data-save="language">Save changes</button>
+        </div>
+      </section>
+
+      <!-- Appearance -->
+      <section id="appearance" class="panel">
+        <header>
+          <div>
+            <h2>Appearance & Accessibility</h2>
+            <div class="sub">Theme, density, motion</div>
+          </div>
+        </header>
+
+        <div class="grid threecol">
+          <label>Theme
+            <select id="themeSel">
+              <option value="system">System</option>
+              <option value="dark" selected>Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </label>
+          <label>Density
+            <select id="densitySel">
+              <option value="cozy" selected>Cozy</option>
+              <option value="compact">Compact</option>
+            </select>
+          </label>
+          <label>Reduce motion
+            <div class="row"><div id="reduceMotion" class="switch" role="switch" aria-checked="false" tabindex="0"></div></div>
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" data-save="appearance">Save changes</button>
+        </div>
+      </section>
+
+      <!-- Privacy & Data -->
+      <section id="data" class="panel">
+        <header>
+          <div>
+            <h2>Privacy & Data</h2>
+            <div class="sub">Export / marketing / cache</div>
+          </div>
+        </header>
+
+        <div class="grid twocol">
+          <label>Personalized tips
+            <div class="row"><div id="personalized" class="switch" role="switch" aria-checked="true" tabindex="0"></div></div>
+          </label>
+          <label>Marketing emails
+            <div class="row"><div id="marketing" class="switch" role="switch" aria-checked="false" tabindex="0"></div></div>
+          </label>
+          <div class="row" style="grid-column:1/-1; gap:8px; flex-wrap:wrap">
+            <button class="btn" id="exportData">Export my data</button>
+            <button class="btn" id="clearCache">Clear local cache</button>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" data-save="data">Save changes</button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /* ========= Utilities ========= */
+    const $ = (s, r=document) => r.querySelector(s);
+    const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+    const toast = (msg) => {
+      const el = $('#toast'); if(!el) return;
+      el.textContent = msg; el.classList.add('show');
+      setTimeout(()=>el.classList.remove('show'), 1800);
+    };
+    const setSwitch = (el, v) => el?.setAttribute('aria-checked', v ? 'true':'false');
+    const getSwitch = (el) => (el?.getAttribute('aria-checked') === 'true');
+
+    /* ========= Sidebar active state + deep link ========= */
+    function syncActive(){
+      const hash = location.hash || '#account';
+      $$('.nav a').forEach(a => a.classList.toggle('active', a.getAttribute('href')===hash));
+    }
+    window.addEventListener('hashchange',()=>{
+      syncActive();
+      const id = (location.hash||'#account').slice(1);
+      const sec = document.getElementById(id);
+      if(sec){
+        sec.scrollIntoView({behavior:'smooth', block:'start'});
+        sec.classList.add('anchor-highlight');
+        setTimeout(()=>sec.classList.remove('anchor-highlight'), 1000);
+      }
+    });
+    syncActive();
+
+    /* ========= Time zone list ========= */
+    const COMMON_TZ = [
+      "UTC","Europe/London","Europe/Paris","Europe/Berlin","Europe/Madrid","Europe/Rome",
+      "Europe/Amsterdam","Europe/Stockholm","Europe/Athens","Europe/Warsaw",
+      "Asia/Dhaka","Asia/Kolkata","Asia/Karachi","Asia/Dubai","Asia/Riyadh","Asia/Doha",
+      "Asia/Singapore","Asia/Bangkok","Asia/Tokyo","Asia/Seoul","Asia/Hong_Kong","Asia/Shanghai","Asia/Taipei",
+      "Australia/Sydney","Pacific/Auckland",
+      "Africa/Cairo","Africa/Johannesburg","Africa/Nairobi",
+      "America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Toronto","America/Sao_Paulo","America/Mexico_City"
+    ];
+
+    /* ========= Load/Init ========= */
+    const KEYS = {
+      settings:'pt_settings',
+      avatar:'pt_avatar_dataurl'
+    };
+
+    const defaults = {
+      account:{ firstName:'', lastName:'', displayName:'', dob:'' },
+      contact:{ email:'', phone:'' },
+      security:{ twofa:false, loginAlerts:true },
+      notifications:{
+        nEmail:true, nSms:false, nPush:true,
+        cTx:true, cReq:true, cSec:true, cPromo:false
+      },
+      language:{
+        lang:'en', region:'US',
+        tzAuto:true, tz: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+      },
+      appearance:{ theme:'dark', density:'cozy', reduceMotion:false },
+      data:{ personalized:true, marketing:false }
+    };
+
+    function loadSettings(){
+      try{
+        const saved = JSON.parse(localStorage.getItem(KEYS.settings)||'{}');
+        return deepMerge(JSON.parse(JSON.stringify(defaults)), saved);
+      }catch(_){ return JSON.parse(JSON.stringify(defaults)); }
+    }
+    function deepMerge(base, over){
+      for(const k in over){
+        if(base[k] && typeof base[k]==='object' && !Array.isArray(base[k])){
+          base[k] = deepMerge(base[k], over[k]);
+        }else base[k] = over[k];
+      }
+      return base;
+    }
+    let S = loadSettings();
+
+    /* ========= Bind UI ========= */
+    // Avatar
+    const avatarImg = $('#avatarImg'), avatarFallback = $('#avatarFallback');
+    const avatarBtn = $('#avatarBtn'), avatarInput = $('#avatarInput');
+    function loadAvatar(){
+      const d = localStorage.getItem(KEYS.avatar);
+      if(d){ avatarImg.src = d; avatarImg.style.display='block'; avatarFallback.style.display='none'; }
+    }
+    avatarBtn?.addEventListener('click', ()=> avatarInput.click());
+    avatarInput?.addEventListener('change', ()=>{
+      const f = avatarInput.files?.[0]; if(!f) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        localStorage.setItem(KEYS.avatar, reader.result);
+        loadAvatar(); toast('Profile photo updated');
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Account
+    $('#firstName').value = S.account.firstName;
+    $('#lastName').value = S.account.lastName;
+    $('#displayName').value = S.account.displayName;
+    $('#dob').value = S.account.dob;
+
+    // Contact
+    $('#email').value = S.contact.email;
+    $('#phone').value = S.contact.phone;
+
+    // Security
+    setSwitch($('#twofa'), S.security.twofa);
+    setSwitch($('#loginAlerts'), S.security.loginAlerts);
+
+    // Notifications
+    setSwitch($('#nEmail'), S.notifications.nEmail);
+    setSwitch($('#nSms'), S.notifications.nSms);
+    setSwitch($('#nPush'), S.notifications.nPush);
+    setSwitch($('#cTx'), S.notifications.cTx);
+    setSwitch($('#cReq'), S.notifications.cReq);
+    setSwitch($('#cSec'), S.notifications.cSec);
+    setSwitch($('#cPromo'), S.notifications.cPromo);
+
+    // Language/Region/TZ
+    $('#langSel').value = S.language.lang;
+    $('#regionFmt').value = S.language.region;
+
+    const tzSel = $('#tzSel'), tzAuto = $('#tzAuto'), tzHint = $('#tzHint');
+    tzSel.innerHTML = COMMON_TZ.map(z=>`<option value="${z}">${z}</option>`).join('');
+    tzSel.value = S.language.tz;
+    setSwitch(tzAuto, S.language.tzAuto);
+    tzSel.disabled = S.language.tzAuto;
+    tzHint.textContent = `Detected: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
+
+    // Appearance
+    $('#themeSel').value = S.appearance.theme;
+    $('#densitySel').value = S.appearance.density;
+    setSwitch($('#reduceMotion'), S.appearance.reduceMotion);
+
+    // Switch toggles click/keyboard
+    $$('.switch').forEach(sw=>{
+      sw.addEventListener('click',()=> setSwitch(sw, !getSwitch(sw)));
+      sw.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); setSwitch(sw, !getSwitch(sw)); }});
+    });
+
+    // Save handlers
+    $$('#content [data-save]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const which = btn.getAttribute('data-save');
+        if(which==='account'){
+          S.account.firstName = $('#firstName').value.trim();
+          S.account.lastName = $('#lastName').value.trim();
+          S.account.displayName = $('#displayName').value.trim();
+          S.account.dob = $('#dob').value;
+        }
+        if(which==='contact'){
+          S.contact.email = $('#email').value.trim();
+          S.contact.phone = $('#phone').value.trim();
+        }
+        if(which==='security'){
+          S.security.twofa = getSwitch($('#twofa'));
+          S.security.loginAlerts = getSwitch($('#loginAlerts'));
+        }
+        if(which==='notifications'){
+          S.notifications.nEmail = getSwitch($('#nEmail'));
+          S.notifications.nSms = getSwitch($('#nSms'));
+          S.notifications.nPush = getSwitch($('#nPush'));
+          S.notifications.cTx = getSwitch($('#cTx'));
+          S.notifications.cReq = getSwitch($('#cReq'));
+          S.notifications.cSec = getSwitch($('#cSec'));
+          S.notifications.cPromo = getSwitch($('#cPromo'));
+        }
+        if(which==='language'){
+          S.language.lang = $('#langSel').value;
+          S.language.region = $('#regionFmt').value;
+          S.language.tzAuto = getSwitch(tzAuto);
+          S.language.tz = tzSel.value;
+          document.documentElement.lang = S.language.lang;
+        }
+        if(which==='appearance'){
+          S.appearance.theme = $('#themeSel').value;
+          S.appearance.density = $('#densitySel').value;
+          S.appearance.reduceMotion = getSwitch($('#reduceMotion'));
+        }
+        if(which==='data'){
+          S.data.personalized = getSwitch($('#personalized'));
+          S.data.marketing = getSwitch($('#marketing'));
+        }
+        localStorage.setItem(KEYS.settings, JSON.stringify(S));
+        toast('Saved successfully');
+        dirty=false;
+      });
+    });
+
+    // Verify demo buttons
+    $('#verifyEmail')?.addEventListener('click', ()=> toast('Verification link sent to email'));
+    $('#verifyPhone')?.addEventListener('click', ()=> toast('OTP sent to phone'));
+    $('#goPassword')?.addEventListener('click', (e)=>{ e.preventDefault(); toast('Open password change modal (demo)'); });
+    $('#revokeOthers')?.addEventListener('click', ()=> toast('Other sessions signed out (demo)'));
+    $('#exportData')?.addEventListener('click', ()=> toast('Export scheduled (demo)'));
+    $('#clearCache')?.addEventListener('click', ()=>{ localStorage.clear(); toast('Local cache cleared'); });
+
+    // Delete account (soft confirm)
+    $('#deleteAccount')?.addEventListener('click', ()=>{
+      if(confirm('Type DELETE to remove your account (demo).')){
+        const v = prompt('Please type DELETE to confirm');
+        if(v==='DELETE'){ localStorage.clear(); toast('Account deleted (demo)'); setTimeout(()=>location.href='index.html', 800); }
+      }
+    });
+
+    // Time zone auto/manual
+    tzAuto?.addEventListener('click', ()=>{
+      const on = getSwitch(tzAuto);
+      tzSel.disabled = on;
+      if(on){ tzSel.value = Intl.DateTimeFormat().resolvedOptions().timeZone || tzSel.value; }
+    });
+
+    // Populate avatar from storage
+    loadAvatar();
+
+    // Unsaved guard
+    let dirty=false;
+    $$('#content input, #content select, #content textarea').forEach(el=>{
+      el.addEventListener('input', ()=> dirty=true);
+      el.addEventListener('change', ()=> dirty=true);
+    });
+    window.addEventListener('beforeunload', (e)=>{
+      if(dirty){ e.preventDefault(); e.returnValue=''; }
+    });
+
+    // On first load, jump to hash section smoothly and highlight
+    window.addEventListener('load', ()=>{
+      const id = (location.hash||'#account').slice(1);
+      const sec = document.getElementById(id);
+      if(sec){ sec.scrollIntoView({behavior:'smooth', block:'start'}); sec.classList.add('anchor-highlight'); setTimeout(()=>sec.classList.remove('anchor-highlight'), 1000); }
+    });
+  </script>
+</body>
+</html>

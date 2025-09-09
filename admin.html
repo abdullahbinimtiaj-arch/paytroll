@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>PAYTROLL — Admin Panel</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<style>
+  :root{
+    --bg1:#0a0f1c; --bg2:#0f172a;
+    --glass:rgba(255,255,255,.07); --glass2:rgba(255,255,255,.12);
+    --border:rgba(148,163,184,.20);
+    --text:#eef2ff; --muted:#a7b0c6;
+    --brand:#8b5cf6; --brand2:#6366f1;
+    --ok:#10b981; --bad:#ef4444; --warn:#f59e0b; --info:#60a5fa;
+    --radius:16px; --radius-sm:12px;
+    --shadow:0 30px 80px rgba(0,0,0,.5);
+    --container:max(320px, min(1040px, 92vw));
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  html,body{overflow-x:hidden}
+  body{
+    margin:0; color:var(--text);
+    font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 20% -10%, rgba(139,92,246,.18), transparent 55%),
+      radial-gradient(1200px 700px at 120% 10%, rgba(99,102,241,.14), transparent 55%),
+      linear-gradient(135deg,var(--bg1),var(--bg2));
+  }
+  a{color:inherit; text-decoration:none}
+  .app{display:grid; grid-template-columns:240px 1fr; min-height:100vh; min-width:0}
+  @media(max-width:1024px){ .app{grid-template-columns:1fr} }
+
+  /* Sidebar */
+  .sidebar{
+    position:sticky; top:0; align-self:start; height:100vh; overflow:auto;
+    background:rgba(2,6,23,.45); backdrop-filter:blur(12px);
+    border-right:1px solid var(--border); padding:16px;
+  }
+  .brand{font-weight:900; letter-spacing:.8px; font-size:18px; margin-bottom:12px}
+  .nav{display:grid; gap:6px}
+  .nav a{
+    padding:10px 12px; border-radius:12px; color:var(--muted);
+    border:1px solid transparent; display:flex; align-items:center; gap:10px;
+  }
+  .nav a.active, .nav a:hover{background:var(--glass); color:#fff; border-color:var(--border)}
+  .logout{margin-top:8px; border-top:1px dashed var(--border); padding-top:8px}
+  .ico{width:18px; height:18px; display:inline-grid; place-items:center}
+  .ico svg{width:18px; height:18px; stroke:#c7d2fe}
+
+  /* Main */
+  .main{display:flex; flex-direction:column; width:100%; min-width:0}
+  header{
+    position:sticky; top:0; z-index:5;
+    display:flex; align-items:center; justify-content:flex-end; gap:12px;
+    padding:12px 16px; border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(2,6,23,.45), rgba(2,6,23,.10));
+    backdrop-filter:blur(10px);
+  }
+  .header-right{display:flex; align-items:center; gap:10px}
+  .icon-btn{
+    width:40px; height:40px; display:grid; place-items:center; border-radius:12px;
+    background:var(--glass); border:1px solid var(--border); cursor:pointer; position:relative;
+  }
+  .icon-btn .dot{position:absolute; top:7px; right:7px; width:9px; height:9px; background:#ef4444; border-radius:50%}
+  .csv-btn{
+    padding:10px 16px; border-radius:999px; border:1px solid transparent; cursor:pointer;
+    font-weight:800; color:#fff; background:linear-gradient(135deg,var(--brand),var(--brand2));
+    box-shadow:0 16px 36px rgba(79,70,229,.35);
+  }
+
+  .content{padding:16px; display:flex; justify-content:center}
+  .container{width:var(--container); margin:auto}
+
+  /* Cards */
+  .grid{display:grid; gap:12px}
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  @media(max-width:1100px){ .grid-2{grid-template-columns:1fr} }
+  .row{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:12px}
+  .card{
+    background:rgba(255,255,255,.06); border:1px solid var(--border); border-radius:var(--radius);
+    padding:12px; box-shadow:var(--shadow);
+  }
+  .card h3{margin:0 0 8px 0; font-size:16px; font-weight:900}
+  .muted{color:var(--muted); font-size:12px}
+
+  /* Treasury & Profit boxes */
+  .tre-list{margin-top:6px; border:1px solid var(--border); border-radius:14px; overflow:hidden}
+  .tre-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:8px 10px; background:rgba(255,255,255,.05);
+    border-top:1px dashed var(--border);
+  }
+  .tre-row:first-child{border-top:0}
+  .tre-amt{font-weight:900; font-size:20px}
+  .pill{font-size:12px; padding:6px 10px; border-radius:999px; border:1px solid var(--border); background:rgba(255,255,255,.08)}
+  .profit-amt{font-size:28px; font-weight:900; margin-top:6px; color:#e5e7eb}
+
+  /* Compact KPI */
+  .mini{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+  @media(max-width:560px){ .mini{grid-template-columns:1fr} }
+  .mini .card{padding:10px}
+  .mini .big{font-size:22px; font-weight:900}
+
+  /* Tables */
+  table{width:100%; border-collapse:collapse}
+  th,td{padding:8px; border-bottom:1px solid var(--border); text-align:left; font-size:14px}
+  th{color:#cbd5e1}
+  .b{padding:4px 8px; border-radius:999px; font-size:12px; border:1px solid var(--border)}
+  .b-ok{background:rgba(16,185,129,.18); color:#34d399}
+  .b-warn{background:rgba(245,158,11,.18); color:#fbbf24}
+  .b-bad{background:rgba(239,68,68,.18); color:#f87171}
+
+  /* Inputs */
+  .mfield{display:grid; gap:6px; margin-bottom:10px}
+  .mrow{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  @media(max-width:560px){ .mrow{grid-template-columns:1fr} }
+  input,select,textarea{
+    background:rgba(255,255,255,.06); color:#fff; border:1px solid var(--border);
+    border-radius:12px; padding:10px 12px; font:inherit;
+  }
+  .search{display:flex; gap:8px; align-items:center}
+  .search input{flex:1}
+
+  /* Modals */
+  .backdrop{position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+            background:rgba(2,6,23,.55); backdrop-filter:blur(10px); z-index:40; padding:16px}
+  .modal{width:min(640px, 96vw); background:rgba(255,255,255,.06); border:1px solid var(--glass2);
+         border-radius:16px; overflow:hidden; box-shadow:var(--shadow)}
+  .modal-h{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; border-bottom:1px solid var(--border)}
+  .modal-b{padding:14px}
+  .mact{display:flex; justify-content:flex-end; gap:8px}
+  .btn{padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,.10); color:#fff; cursor:pointer}
+  .btn.primary{border-color:transparent; background:linear-gradient(135deg,var(--brand),var(--brand2)); font-weight:800}
+
+  /* Review (wide) */
+  .modal.wide{width:min(820px,96vw)}
+
+  /* Toasts & Notifs */
+  .toasts{position:fixed; right:16px; bottom:16px; display:grid; gap:8px; z-index:60}
+  .toast{background:#0b1326; color:#e5e7eb; border:1px solid var(--border);
+         border-left:4px solid var(--brand2); padding:10px 12px; border-radius:12px}
+  .notif-panel{position:absolute; right:16px; top:56px; width:320px; display:none;
+               background:rgba(15,23,42,.96); border:1px solid var(--border); border-radius:14px; overflow:hidden; z-index:10}
+  .notif-panel h4{margin:8px 10px; font-size:12px; color:#cbd5e1}
+  .notif-item{display:flex; gap:10px; padding:10px 12px; border-top:1px dashed var(--border)}
+
+  /* Charts */
+  #txChart, #histChart{max-width:100%}
+  /* --- FIXED HEIGHT WRAPPER FOR CHARTS --- */
+.chart-box{position:relative; width:100%; height:140px}
+.chart-box canvas{position:absolute; inset:0; width:100% !important; height:100% !important}
+.chart-box--history{height:180px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">PAYTROLL — Admin</div>
+    <nav class="nav" id="sideNav">
+      <a href="#overview" data-sec="overview" class="active"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 10.5 12 3l9 7.5v8a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 18.5v-8Z" stroke-width="1.6"/></svg>
+      </span> Overview</a>
+      <a href="#users" data-sec="users"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M7 8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10 0a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM1 23a7 7 0 0 1 14 0M9 23a7 7 0 0 1 14 0" stroke-width="1.6"/></svg>
+      </span> Users</a>
+      <a href="#add" data-sec="add"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke-width="1.8"/></svg>
+      </span> Add Money</a>
+      <a href="#withdraw" data-sec="withdraw"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 10h18M6 22h12a2 2 0 0 0 2-2V4H4v16a2 2 0 0 0 2 2Z" stroke-width="1.6"/></svg>
+      </span> Withdraw Requests</a>
+      <a href="#remove" data-sec="remove"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14" stroke-width="1.8"/></svg>
+      </span> Remove Money</a>
+      <a href="#treasury" data-sec="treasury"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 10h18M4 10V7l8-4 8 4v3M4 10v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9" stroke-width="1.6"/></svg>
+      </span> Add Treasury</a>
+      <a href="#kyc" data-sec="kyc"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l3 6 7 .8-5 4.7 1.4 6.5L12 17l-6.4 3 1.4-6.5-5-4.7L9 8l3-6Z" stroke-width="1.4"/></svg>
+      </span> KYC</a>
+      <a href="#txns" data-sec="txns"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h12M3 18h6" stroke-width="1.6"/></svg>
+      </span> Transactions</a>
+      <a href="#risk" data-sec="risk"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2l9 5v6c0 5-4 8-9 9-5-1-9-4-9-9V7l9-5Z" stroke-width="1.6"/></svg>
+      </span> Risk</a>
+      <a href="#reports" data-sec="reports"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 20h16M6 16V8m6 8V4m6 16v-6" stroke-width="1.6"/></svg>
+      </span> Reports</a>
+      <a href="#settings" data-sec="settings"><span class="ico">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm9-3a7 7 0 0 0-.1-1l2-1-2-3-2 1a7 7 0 0 0-1.7-1l.2-2.3h-4l.2 2.3a7 7 0 0 0-1.7 1l-2-1-2 3 2 1a7 7 0 0 0-.1 1 7 7 0 0 0 .1 1l-2 1 2 3 2-1a7 7 0 0 0 1.7 1l-.2 2.3h4l-.2-2.3a7 7 0 0 0 1.7-1l2 1 2-3-2-1c.1-.3.1-.7.1-1Z" stroke-width="1.2"/></svg>
+      </span> Settings</a>
+      <div class="logout">
+        <a href="login.html" onclick="localStorage.clear()"><span class="ico">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M15 17l5-5-5-5M20 12H9M11 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" stroke-width="1.6"/></svg>
+        </span> Logout</a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <header>
+      <div class="header-right">
+        <button id="notifBtn" class="icon-btn" title="Notifications">🔔</button>
+        <div id="notifPanel" class="notif-panel" role="menu" aria-label="Notifications">
+          <h4>Notifications</h4>
+          <div class="notif-item">📬 <div><b>Welcome</b><div class="muted">System ready</div></div></div>
+        </div>
+        <button id="exportCSV" class="csv-btn">Export CSV</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="container">
+
+        <!-- OVERVIEW -->
+        <section id="sec_overview" class="grid">
+          <div class="grid-2">
+            <div class="card">
+              <h3>Treasury Balance</h3>
+              <div class="muted">Admin treasury across 4 currencies</div>
+              <div class="tre-list" id="treasuryList"></div>
+            </div>
+            <div class="card">
+              <h3>Today's Profit</h3>
+              <div class="muted">Sum of fees from user transactions today</div>
+              <div class="profit-amt" id="profitToday">$0.00</div>
+              <div class="muted" id="profitMeta">0 successful txns</div>
+            </div>
+          </div>
+
+          <div class="mini">
+            <div class="card">
+              <div class="muted">Today's Volume</div>
+              <div class="big" id="todayVol">$0.00</div>
+            </div>
+            <div class="card">
+              <div class="muted">Failure Rate</div>
+              <div class="big" id="failRate">0.0%</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Realtime Transactions</h3>
+            <div class="chart-box">
+              <canvas id="txChart"></canvas>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>Transaction History (7 days)</h3>
+              <div class="chart-box chart-box--history">
+                <canvas id="histChart"></canvas>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Recent Transactions</h3>
+              <div style="overflow:auto; max-height:220px">
+                <table id="recentTable">
+                  <thead><tr>
+                    <th>ID</th><th>Date</th><th>User</th><th>Type</th><th>Cur</th><th>Amt</th><th>Status</th>
+                  </tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- USERS -->
+        <section id="sec_users" class="card" style="display:none">
+          <h3>Users</h3>
+          <div class="muted" style="margin-bottom:8px">Demo list with balances</div>
+          <div style="overflow:auto">
+            <table id="userTable">
+              <thead><tr>
+                <th>ID</th><th>Name</th><th>Email</th>
+                <th>USD</th><th>EUR</th><th>GBP</th><th>SAR</th><th>KYC</th><th>Status</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- WITHDRAW -->
+        <section id="sec_withdraw" class="card" style="display:none">
+          <h3>Withdraw Requests</h3>
+          <div style="overflow:auto">
+            <table id="wTable">
+              <thead><tr>
+                <th>Req ID</th><th>User</th><th>Cur</th><th>Amount</th><th>Requested</th><th>Status</th><th>Actions</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TXNS -->
+        <section id="sec_txns" class="card" style="display:none">
+          <h3>Transactions</h3>
+          <div style="overflow:auto">
+            <table id="txnTable">
+              <thead><tr>
+                <th>ID</th><th>Date</th><th>User</th><th>Type</th><th>Cur</th><th>Amount</th><th>Fee</th><th>Status</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- KYC -->
+        <section id="sec_kyc" class="grid" style="display:none">
+          <div class="card">
+            <h3>KYC — Pending</h3>
+            <div style="overflow:auto">
+              <table id="kycPending"><thead>
+                <tr><th>User</th><th>Email</th><th>Submitted</th><th>Action</th></tr>
+              </thead><tbody></tbody></table>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <h3>KYC — Approved</h3>
+              <ul id="kycApproved" class="muted" style="margin:0; padding-left:18px"></ul>
+            </div>
+            <div class="card">
+              <h3>KYC — Rejected</h3>
+              <ul id="kycRejected" class="muted" style="margin:0; padding-left:18px"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- RISK -->
+        <section id="sec_risk" class="card" style="display:none">
+          <h3>Risk Controls (UI Demo)</h3>
+          <div class="mrow">
+            <div class="mfield"><label><input type="checkbox" checked> Velocity check</label></div>
+            <div class="mfield"><label><input type="checkbox"> Geo/IP rules</label></div>
+            <div class="mfield"><label><input type="checkbox" checked> Device fingerprint</label></div>
+            <div class="mfield"><label><input type="checkbox"> IP denylist</label></div>
+          </div>
+          <div class="muted">Helps reduce fraud/abuse via thresholds & rules. (Demo only)</div>
+        </section>
+
+        <!-- REPORTS -->
+        <section id="sec_reports" class="card" style="display:none">
+          <h3>Reports</h3>
+          <div class="mrow">
+            <button class="btn">Settlement CSV</button>
+            <button class="btn">Fees CSV</button>
+            <button class="btn">Revenue CSV</button>
+          </div>
+          <div class="muted" style="margin-top:8px">Exports are generated from in-memory demo data.</div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="sec_settings" class="card" style="display:none">
+          <h3>Settings</h3>
+          <div class="grid" style="gap:12px">
+            <div class="card">
+              <h3>General</h3>
+              <div class="mfield"><label>Product Name</label><input id="setBrand" value="PAYTROLL"/></div>
+              <div class="mfield"><label>Support Email</label><input value="support@paytroll.example"/></div>
+              <button class="btn" id="saveBrand">Save</button>
+            </div>
+            <div class="card">
+              <h3>User Management</h3>
+              <label class="mfield"><input type="checkbox" checked> Require unique email</label>
+              <label class="mfield"><input type="checkbox" checked> Lock on 5 failed login</label>
+              <button class="btn">Save</button>
+            </div>
+            <div class="card">
+              <h3>Financial</h3>
+              <div class="mrow">
+                <div class="mfield"><label>Default Fee %</label><input id="feePct" type="number" step="0.01" value="1.2"/></div>
+                <div class="mfield"><label>Daily Limit (USD)</label><input type="number" value="5000"/></div>
+              </div>
+              <button class="btn">Save</button>
+            </div>
+            <div class="card">
+              <h3>Security</h3>
+              <label class="mfield"><input type="checkbox" checked> 2FA for admins</label>
+              <label class="mfield"><input type="checkbox" checked> 12h session timeout</label>
+              <label class="mfield"><input type="checkbox" checked> Audit logs</label>
+              <button class="btn">Save</button>
+            </div>
+            <div class="card">
+              <h3>Notifications</h3>
+              <label class="mfield"><input type="checkbox" checked> Email alerts</label>
+              <label class="mfield"><input type="checkbox" checked> Push notifications</label>
+              <button class="btn">Save</button>
+            </div>
+            <div class="card">
+              <h3>Integrations</h3>
+              <div class="mfield"><label>Webhook URL</label><input placeholder="https://..."/></div>
+              <div class="mfield"><label>API Key</label><input placeholder="pk_live_***"/></div>
+              <button class="btn">Save</button>
+            </div>
+            <div class="card">
+              <h3>Audit & Logs</h3>
+              <label class="mfield"><input type="checkbox" checked> Track admin actions</label>
+              <label class="mfield"><input type="checkbox"> Export daily logs</label>
+              <button class="btn">Save</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODALS -->
+        <!-- Add Money -->
+        <div id="md_add" class="backdrop">
+          <div class="modal">
+            <div class="modal-h"><div style="font-weight:900">Add Money</div><button class="btn" data-close>Close</button></div>
+            <div class="modal-b">
+              <div class="mfield">
+                <label>User (search by name or ID)</label>
+                <div class="search">
+                  <input id="add_user" placeholder="e.g. Nadia or U-1001" list="userlist">
+                </div>
+                <datalist id="userlist"></datalist>
+              </div>
+              <div class="mrow">
+                <div class="mfield"><label>Currency</label>
+                  <select id="add_ccy"><option>USD</option><option>EUR</option><option>GBP</option><option>SAR</option></select>
+                </div>
+                <div class="mfield"><label>Amount</label><input id="add_amt" type="number" step="0.01" placeholder="0.00"/></div>
+              </div>
+              <div class="mfield"><label>Note (optional)</label><textarea id="add_note" rows="3"></textarea></div>
+              <div class="mact"><button class="btn" data-close>Cancel</button><button class="btn primary" id="add_apply">Add</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Remove Money -->
+        <div id="md_remove" class="backdrop">
+          <div class="modal">
+            <div class="modal-h"><div style="font-weight:900">Remove Money</div><button class="btn" data-close>Close</button></div>
+            <div class="modal-b">
+              <div class="mfield">
+                <label>User (search by name or ID)</label>
+                <div class="search">
+                  <input id="rem_user" placeholder="e.g. Arif or U-1002" list="userlist2">
+                </div>
+                <datalist id="userlist2"></datalist>
+              </div>
+              <div class="mrow">
+                <div class="mfield"><label>Currency</label>
+                  <select id="rem_ccy"><option>USD</option><option>EUR</option><option>GBP</option><option>SAR</option></select>
+                </div>
+                <div class="mfield"><label>Amount</label><input id="rem_amt" type="number" step="0.01" placeholder="0.00"/></div>
+              </div>
+              <div class="mfield"><label>Reason / Note (will notify user)</label><textarea id="rem_note" rows="3" placeholder="e.g. Chargeback adjustment / policy violation"></textarea></div>
+              <div class="mact"><button class="btn" data-close>Cancel</button><button class="btn primary" id="rem_apply">Remove</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Treasury -->
+        <div id="md_treasury" class="backdrop">
+          <div class="modal">
+            <div class="modal-h"><div style="font-weight:900">Add Treasury Funds</div><button class="btn" data-close>Close</button></div>
+            <div class="modal-b">
+              <div class="mfield">
+                <label>Method</label>
+                <select id="tre_method">
+                  <option value="bank">From Bank</option>
+                  <option value="custom">Custom Add</option>
+                </select>
+              </div>
+              <div class="mrow">
+                <div class="mfield"><label>Currency</label><select id="tre_ccy"><option>USD</option><option>EUR</option><option>GBP</option><option>SAR</option></select></div>
+                <div class="mfield"><label>Amount</label><input id="tre_amt" type="number" step="0.01" placeholder="0.00"/></div>
+              </div>
+              <div id="tre_bank_fields">
+                <div class="mrow">
+                  <div class="mfield"><label>Bank Name</label><input id="tre_bank" placeholder="e.g. HSBC"/></div>
+                  <div class="mfield"><label>Reference</label><input id="tre_ref" placeholder="e.g. TRX-90231"/></div>
+                </div>
+              </div>
+              <div class="mfield"><label>Note</label><textarea id="tre_note" rows="3" placeholder="e.g. Investor top-up / liquidity injection"></textarea></div>
+              <div class="mact"><button class="btn" data-close>Cancel</button><button class="btn primary" id="tre_apply">Add to Treasury</button></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Review Withdraw (full detail) -->
+        <div id="md_review" class="backdrop">
+          <div class="modal wide">
+            <div class="modal-h"><div style="font-weight:900">Withdraw Review</div><button class="btn" data-close>Close</button></div>
+            <div class="modal-b" id="reviewBody"></div>
+          </div>
+        </div>
+
+      </div><!-- /.container -->
+    </div><!-- /.content -->
+  </div><!-- /.main -->
+</div><!-- /.app -->
+
+<!-- Toasts -->
+<div id="toasts" class="toasts"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function(){
+  /* ===== Demo Data ===== */
+  const users=[
+    {id:'U-1001', name:'Nadia Rahman', email:'nadia@example.com', kyc:'approved', status:'active', balances:{USD:8326.25, EUR:0, GBP:0, SAR:0}},
+    {id:'U-1002', name:'Arif Khan', email:'arif@example.com', kyc:'pending', status:'active', balances:{USD:0, EUR:7156.00, GBP:0, SAR:0}},
+    {id:'U-1003', name:'Sadia Afreen', email:'sadia@example.com', kyc:'approved', status:'locked', balances:{USD:0, EUR:0, GBP:4268.40, SAR:0}},
+    {id:'U-1004', name:'Tanvir Hasan', email:'tanvir@example.com', kyc:'pending', status:'active', balances:{USD:0, EUR:0, GBP:0, SAR:6197.00}},
+    {id:'U-1005', name:'Shuvo Sarker', email:'shuvo@example.com', kyc:'rejected', status:'active', balances:{USD:120.55, EUR:0, GBP:0, SAR:0}},
+    {id:'U-1006', name:'Mira Chowdhury', email:'mira@example.com', kyc:'approved', status:'active', balances:{USD:950.10, EUR:0, GBP:0, SAR:0}}
+  ];
+  const currencies=['USD','EUR','GBP','SAR'];
+  const sym = c=> c==='USD'? '$': c==='EUR'? '€' : c==='GBP'? '£':'﷼';
+
+  const treasury = {USD:12400, EUR:8200, GBP:6900, SAR:4500};
+
+  // Seed transactions (some today, some earlier)
+  const txns=[];
+  const types=['deposit','transfer','payout','refund'];
+  for(let i=0;i<60;i++){
+    const u = users[i%users.length];
+    const t = types[i%types.length];
+    const cur = currencies[i%currencies.length];
+    const amt = +(Math.random()*800+20).toFixed(2);
+    const feePct = 1.2/100;
+    const fee = +(amt*feePct).toFixed(2);
+    const daysAgo = Math.floor(Math.random()*7);
+    const date = new Date(Date.now() - daysAgo*24*3600*1000 - Math.random()*10*3600*1000);
+    const status = Math.random()<0.08 ? 'failed' : 'succeeded';
+    txns.push({id:`T-${10000+i}`, date:date.toISOString(), userId:u.id, type:t, currency:cur, amount:amt, fee, status});
+  }
+
+  // Withdraw Requests with destination detail
+  const withdrawReqs=[];
+  const bankNames=['HSBC','Standard Chartered','BRAC Bank','Chase','Barclays','Riyad Bank'];
+  const mfsProviders=['bKash','Nagad','Rocket','Paytm','PhonePe','STC Pay'];
+  function rand(arr){ return arr[Math.floor(Math.random()*arr.length)] }
+  for(let i=0;i<10;i++){
+    const u=users[(i+2)%users.length]; const cur=currencies[(i+1)%currencies.length];
+    const amt=+(Math.random()*400+20).toFixed(2);
+    const date = new Date(Date.now()-Math.random()*3*24*3600*1000);
+    const method = Math.random()<0.6?'bank':'mfs';
+    const dest = method==='bank'
+      ? { bank: rand(bankNames), accountName: u.name, accountNo: '****'+Math.floor(1000+Math.random()*9000), city: 'Dhaka', country:'Bangladesh' }
+      : { provider: rand(mfsProviders), msisdn: '+8801'+Math.floor(100000000+Math.random()*899999999) };
+    withdrawReqs.push({id:`W-${7000+i}`, userId:u.id, currency:cur, amount:amt, requestedAt:date.toISOString(), status:'pending', method, dest});
+  }
+
+  /* ===== Helpers ===== */
+  const $=s=>document.querySelector(s);
+  const $$=s=>Array.from(document.querySelectorAll(s));
+  const fmt=n=> new Intl.NumberFormat('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}).format(+n||0);
+  const toast=(msg)=>{ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; $('#toasts').appendChild(t); setTimeout(()=>t.remove(), 2600); };
+  const todayStr = ()=> new Date().toISOString().slice(0,10);
+
+  /* ===== Render Overview ===== */
+  function renderTreasury(){
+    const list=$('#treasuryList');
+    list.innerHTML = currencies.map(c=>{
+      return `<div class="tre-row">
+                <div style="display:flex;align-items:center;gap:10px"><span class="pill">${c}</span></div>
+                <div class="tre-amt">${sym(c)}${fmt(treasury[c])}</div>
+              </div>`;
+    }).join('');
+  }
+  function renderProfitAndKPIs(){
+    const today = todayStr();
+    const todays = txns.filter(t=>t.date.slice(0,10)===today);
+    const vol = todays.reduce((s,t)=>s+(t.status==='succeeded'? t.amount:0),0);
+    const succ = todays.filter(t=>t.status==='succeeded');
+    const fails = todays.filter(t=>t.status==='failed');
+    const profit = succ.reduce((s,t)=>s + (t.fee||0),0);
+
+    $('#profitToday').textContent = `$${fmt(profit)}`;
+    $('#profitMeta').textContent = `${succ.length} successful txns • fees auto-calculated`;
+    $('#todayVol').textContent = `$${fmt(vol)}`;
+    const failRate = todays.length? (fails.length/todays.length*100):0;
+    $('#failRate').textContent = `${failRate.toFixed(1)}%`;
+  }
+  function renderRecent(){
+    const tb=$('#recentTable tbody'); tb.innerHTML='';
+    txns.slice(0,12).sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(t=>{
+      const d=new Date(t.date);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${t.id}</td><td>${d.toLocaleString()}</td><td>${t.userId}</td>
+        <td>${t.type}</td><td>${t.currency}</td>
+        <td>${sym(t.currency)}${fmt(t.amount)}</td>
+        <td><span class="b ${t.status==='succeeded'?'b-ok':t.status==='pending'?'b-warn':'b-bad'}">${t.status}</span></td>`;
+      tb.appendChild(tr);
+    });
+  }
+
+  /* ===== Tables ===== */
+  function renderUsers(){
+    const tb=$('#userTable tbody'); if(!tb) return;
+    tb.innerHTML='';
+    users.forEach(u=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${u.id}</td><td>${u.name}</td><td>${u.email}</td>
+        <td>${sym('USD')}${fmt(u.balances.USD)}</td>
+        <td>${sym('EUR')}${fmt(u.balances.EUR)}</td>
+        <td>${sym('GBP')}${fmt(u.balances.GBP)}</td>
+        <td>${sym('SAR')}${fmt(u.balances.SAR)}</td>
+        <td><span class="b ${u.kyc==='approved'?'b-ok':u.kyc==='pending'?'b-warn':'b-bad'}">${u.kyc}</span></td>
+        <td>${u.status}</td>`;
+      tb.appendChild(tr);
+    });
+  }
+  function renderWithdraws(){
+    const tb=$('#wTable tbody'); if(!tb) return; tb.innerHTML='';
+    withdrawReqs.forEach(w=>{
+      const d=new Date(w.requestedAt);
+      const row=document.createElement('tr');
+      row.innerHTML=`<td>${w.id}</td><td>${w.userId}</td><td>${w.currency}</td>
+        <td>${sym(w.currency)}${fmt(w.amount)}</td><td>${d.toLocaleString()}</td>
+        <td><span class="b ${w.status==='pending'?'b-warn':w.status==='approved'?'b-ok':'b-bad'}">${w.status}</span></td>
+        <td>
+          ${w.status==='pending' ? `
+            <button class="btn" data-act="review" data-id="${w.id}">Review</button>
+            <button class="btn" data-act="approve" data-id="${w.id}">Approve</button>
+            <button class="btn" data-act="reject" data-id="${w.id}">Reject</button>` : ''}
+        </td>`;
+      tb.appendChild(row);
+    });
+  }
+  function renderTxns(){
+    const tb=$('#txnTable tbody'); if(!tb) return; tb.innerHTML='';
+    txns.slice(0,80).sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(t=>{
+      const d=new Date(t.date);
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${t.id}</td><td>${d.toLocaleString()}</td><td>${t.userId}</td>
+        <td>${t.type}</td><td>${t.currency}</td>
+        <td>${sym(t.currency)}${fmt(t.amount)}</td><td>$${fmt(t.fee)}</td>
+        <td><span class="b ${t.status==='succeeded'?'b-ok':t.status==='pending'?'b-warn':'b-bad'}">${t.status}</span></td>`;
+      tb.appendChild(tr);
+    });
+  }
+
+  /* ===== KYC ===== */
+  function renderKyc(){
+    const pBody=$('#kycPending tbody'); pBody.innerHTML='';
+    const approved=$('#kycApproved'); const rejected=$('#kycRejected');
+    approved.innerHTML=''; rejected.innerHTML='';
+
+    users.forEach(u=>{
+      if(u.kyc==='pending'){
+        const tr=document.createElement('tr');
+        const submitted = new Date(Date.now()-Math.random()*5*24*3600*1000).toLocaleDateString();
+        tr.innerHTML=`<td>${u.name} (${u.id})</td><td>${u.email}</td><td>${submitted}</td>
+        <td>
+          <button class="btn" data-kyc="remind" data-id="${u.id}">Remind</button>
+          <button class="btn" data-kyc="approve" data-id="${u.id}">Approve</button>
+          <button class="btn" data-kyc="reject" data-id="${u.id}">Reject</button>
+        </td>`;
+        pBody.appendChild(tr);
+      }
+      if(u.kyc==='approved') approved.innerHTML += `<li>${u.name} — ${u.id}</li>`;
+      if(u.kyc==='rejected') rejected.innerHTML += `<li>${u.name} — ${u.id}</li>`;
+    });
+  }
+
+  /* ===== User search (Add/Remove) ===== */
+  function fillDatalists(){
+    const dl1=$('#userlist'), dl2=$('#userlist2');
+    const opts=users.map(u=>`<option value="${u.id} — ${u.name}">`);
+    dl1.innerHTML=opts.join(''); dl2.innerHTML=opts.join('');
+  }
+  function resolveUser(inputVal){
+    const v=(inputVal||'').trim().toLowerCase();
+    if(!v) return null;
+    let hit = users.find(u=>u.id.toLowerCase()===v || u.name.toLowerCase()===v);
+    if(!hit){
+      // Try "U-1001 — Name" pattern or partial name
+      hit = users.find(u=>v.includes(u.id.toLowerCase())) || users.find(u=>u.name.toLowerCase().includes(v));
+    }
+    return hit||null;
+  }
+
+  /* ===== Forms ===== */
+  function openModal(id){ const el=$(id); if(!el) return; el.style.display='flex'; document.body.style.overflow='hidden'; }
+  function closeModals(){ $$('.backdrop').forEach(b=> b.style.display='none'); document.body.style.overflow=''; }
+
+  $('#add_apply').addEventListener('click',()=>{
+    const usr=resolveUser($('#add_user').value);
+    const c=$('#add_ccy').value; const amt=parseFloat($('#add_amt').value||'0'); const note=$('#add_note').value||'';
+    if(!usr) return toast('Select a valid user');
+    if(!(amt>0)) return toast('Enter amount');
+    usr.balances[c] = +(usr.balances[c] + amt).toFixed(2);
+    const feePct=parseFloat($('#feePct').value||'1.2')/100;
+    const fee=+(amt*feePct).toFixed(2);
+    txns.unshift({id:`T-${Date.now()}`, date:new Date().toISOString(), userId:usr.id, type:'deposit', currency:c, amount:amt, fee, status:'succeeded', note});
+    toast(`Added ${sym(c)}${fmt(amt)} to ${usr.id}`);
+    renderUsers(); renderProfitAndKPIs(); renderTxns(); renderRecent(); buildHistoryChart();
+    closeModals();
+  });
+
+  $('#rem_apply').addEventListener('click',()=>{
+    const usr=resolveUser($('#rem_user').value);
+    const c=$('#rem_ccy').value; const amt=parseFloat($('#rem_amt').value||'0'); const note=$('#rem_note').value||'';
+    if(!usr) return toast('Select a valid user');
+    if(!(amt>0)) return toast('Enter amount');
+    if(usr.balances[c] < amt) return toast('Insufficient user balance');
+    usr.balances[c] = +(usr.balances[c] - amt).toFixed(2);
+    txns.unshift({id:`T-${Date.now()}`, date:new Date().toISOString(), userId:usr.id, type:'adjustment', currency:c, amount:-amt, fee:0, status:'succeeded', note});
+    pushNotif('Balance adjusted', `${usr.id}: -${sym(c)}${fmt(amt)} — ${note||'no note'}`);
+    toast(`Removed ${sym(c)}${fmt(amt)} from ${usr.id}`);
+    renderUsers(); renderProfitAndKPIs(); renderTxns(); renderRecent(); buildHistoryChart();
+    closeModals();
+  });
+
+  $('#tre_method').addEventListener('change',()=>{
+    const v=$('#tre_method').value;
+    $('#tre_bank_fields').style.display = (v==='bank') ? 'block' : 'none';
+  });
+  $('#tre_apply').addEventListener('click',()=>{
+    const method=$('#tre_method').value;
+    const c=$('#tre_ccy').value; const amt=parseFloat($('#tre_amt').value||'0'); const note=$('#tre_note').value||'';
+    if(!(amt>0)) return toast('Enter amount');
+    treasury[c] = +(treasury[c] + amt).toFixed(2);
+    txns.unshift({id:`TR-${Date.now()}`, date:new Date().toISOString(), userId:'TREASURY', type:(method==='bank'?'treasury_bank':'treasury_custom'), currency:c, amount:amt, fee:0, status:'succeeded', note});
+    toast(`Treasury +${sym(c)}${fmt(amt)} (${method})`);
+    renderTreasury(); renderTxns(); renderRecent(); buildHistoryChart();
+    closeModals();
+  });
+
+  /* ===== Navigation (hash remember) ===== */
+  function showSection(sec){
+    ['overview','users','withdraw','txns','risk','reports','settings','kyc'].forEach(id=>{
+      const el=$(`#sec_${id}`); if(el) el.style.display = (id===sec) ? '' : 'none';
+    });
+    $$('#sideNav a').forEach(a=> a.classList.toggle('active', a.dataset.sec===sec));
+    if(['add','remove','treasury'].includes(sec)){
+      if(sec==='add'){ openModal('#md_add'); }
+      if(sec==='remove'){ openModal('#md_remove'); }
+      if(sec==='treasury'){ $('#tre_method').value='bank'; $('#tre_bank_fields').style.display='block'; openModal('#md_treasury'); }
+    }
+    if(sec==='kyc') renderKyc();
+  }
+  $('#sideNav').addEventListener('click',(e)=>{
+    const a=e.target.closest('a[data-sec]'); if(!a) return;
+    const sec=a.dataset.sec;
+    if(!['add','remove','treasury'].includes(sec)){ e.preventDefault(); location.hash = sec; showSection(sec); }
+  });
+  window.addEventListener('hashchange',()=>{ const sec=(location.hash||'#overview').slice(1); showSection(sec||'overview'); });
+  showSection((location.hash||'#overview').slice(1)||'overview');
+
+  /* ===== Notifications ===== */
+  const notifBtn=$('#notifBtn'); const notifPanel=$('#notifPanel');
+  notifBtn.addEventListener('click',(e)=>{ e.stopPropagation(); notifPanel.style.display = notifPanel.style.display==='block'?'none':'block'; });
+  document.addEventListener('click',(e)=>{ if(notifPanel && !notifPanel.contains(e.target) && e.target!==notifBtn){ notifPanel.style.display='none'; } });
+  document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ notifPanel.style.display='none'; closeModals(); }});
+  function pushNotif(title, sub){
+    if(!notifPanel) return;
+    const item=document.createElement('div'); item.className='notif-item';
+    item.innerHTML=`🔔 <div><b>${title}</b><div class="muted">${sub}</div></div>`;
+    notifPanel.prepend(item);
+  }
+
+  /* ===== Export CSV ===== */
+  $('#exportCSV').addEventListener('click', ()=>{
+    const visibleSec = ['users','txns','withdraw'].find(id=> $(`#sec_${id}`) && $(`#sec_${id}`).style.display!=='none') || 'txns';
+    let rows=[];
+    if(visibleSec==='users'){
+      rows=[['id','name','email','USD','EUR','GBP','SAR','kyc','status'],
+            ...users.map(u=>[u.id,u.name,u.email,u.balances.USD,u.balances.EUR,u.balances.GBP,u.balances.SAR,u.kyc,u.status])];
+    }else if(visibleSec==='withdraw'){
+      rows=[['id','userId','currency','amount','requestedAt','status','method','dest'],
+            ...withdrawReqs.map(w=>[w.id,w.userId,w.currency,w.amount,w.requestedAt,w.status,w.method, JSON.stringify(w.dest)])];
+    }else{
+      rows=[['id','date','userId','type','currency','amount','fee','status'],
+            ...txns.map(t=>[t.id,t.date,t.userId,t.type,t.currency,t.amount,t.fee,t.status])];
+    }
+    const csv = rows.map(r=>r.map(x=>`"${String(x).replaceAll('"','""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv],{type:'text/csv'}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=`${visibleSec}.csv`; a.click(); URL.revokeObjectURL(url);
+    toast('CSV exported');
+  });
+
+  /* ===== Withdraw actions & Review ===== */
+  function openReview(w){
+    const body=$('#reviewBody');
+    const d=new Date(w.requestedAt).toLocaleString();
+    const dest = w.method==='bank'
+      ? `<div class="mrow">
+           <div class="mfield"><label>Bank</label><input value="${w.dest.bank}" readonly></div>
+           <div class="mfield"><label>Account Name</label><input value="${w.dest.accountName}" readonly></div>
+         </div>
+         <div class="mrow">
+           <div class="mfield"><label>Account No.</label><input value="${w.dest.accountNo}" readonly></div>
+           <div class="mfield"><label>City / Country</label><input value="${w.dest.city}, ${w.dest.country}" readonly></div>
+         </div>`
+      : `<div class="mrow">
+           <div class="mfield"><label>Provider</label><input value="${w.dest.provider}" readonly></div>
+           <div class="mfield"><label>MSISDN</label><input value="${w.dest.msisdn}" readonly></div>
+         </div>`;
+    body.innerHTML = `
+      <div class="grid" style="gap:10px">
+        <div class="card">
+          <h3>Request</h3>
+          <div class="mrow">
+            <div class="mfield"><label>Req ID</label><input value="${w.id}" readonly></div>
+            <div class="mfield"><label>User</label><input value="${w.userId}" readonly></div>
+          </div>
+          <div class="mrow">
+            <div class="mfield"><label>Currency</label><input value="${w.currency}" readonly></div>
+            <div class="mfield"><label>Amount</label><input value="${sym(w.currency)}${fmt(w.amount)}" readonly></div>
+          </div>
+          <div class="mfield"><label>Requested</label><input value="${d}" readonly></div>
+        </div>
+        <div class="card">
+          <h3>Destination (${w.method.toUpperCase()})</h3>
+          ${dest}
+        </div>
+      </div>
+      <div class="mact" style="margin-top:8px">
+        <button class="btn" data-close>Close</button>
+        <button class="btn" data-review-act="reject" data-id="${w.id}">Reject</button>
+        <button class="btn primary" data-review-act="approve" data-id="${w.id}">Approve</button>
+      </div>
+    `;
+    openModal('#md_review');
+  }
+
+  $('#wTable').addEventListener('click',(e)=>{
+    const btn=e.target.closest('button[data-act]'); if(!btn) return;
+    const id=btn.dataset.id; const r=withdrawReqs.find(x=>x.id===id); if(!r) return;
+    if(btn.dataset.act==='review'){ openReview(r); return; }
+    if(btn.dataset.act==='approve'){
+      const u=users.find(x=>x.id===r.userId); if(!u) return toast('User not found');
+      if(u.balances[r.currency] < r.amount) return toast('Insufficient balance');
+      u.balances[r.currency] = +(u.balances[r.currency] - r.amount).toFixed(2);
+      r.status='approved';
+      txns.unshift({id:`T-${Date.now()}`, date:new Date().toISOString(), userId:u.id, type:'payout', currency:r.currency, amount:r.amount, fee:0, status:'succeeded'});
+      toast(`Approved ${id}`); renderUsers(); renderWithdraws(); renderProfitAndKPIs(); renderTxns(); renderRecent(); buildHistoryChart();
+    }
+    if(btn.dataset.act==='reject'){ r.status='rejected'; toast(`Rejected ${id}`); renderWithdraws(); }
+  });
+
+  // Review modal approve/reject
+  $('#md_review').addEventListener('click',(e)=>{
+    const b=e.target.closest('[data-review-act]'); if(!b) return;
+    const id=b.dataset.id; const r=withdrawReqs.find(x=>x.id===id); if(!r) return;
+    if(b.dataset.reviewAct==='approve'){
+      const u=users.find(x=>x.id===r.userId); if(!u) return toast('User not found');
+      if(u.balances[r.currency] < r.amount) return toast('Insufficient balance');
+      u.balances[r.currency] = +(u.balances[r.currency] - r.amount).toFixed(2);
+      r.status='approved';
+      txns.unshift({id:`T-${Date.now()}`, date:new Date().toISOString(), userId:u.id, type:'payout', currency:r.currency, amount:r.amount, fee:0, status:'succeeded'});
+      toast(`Approved ${id}`); renderUsers(); renderWithdraws(); renderProfitAndKPIs(); renderTxns(); renderRecent(); buildHistoryChart();
+    }else{
+      r.status='rejected'; toast(`Rejected ${id}`); renderWithdraws();
+    }
+    closeModals();
+  });
+
+  /* ===== KYC actions ===== */
+  $('#sec_kyc').addEventListener('click',(e)=>{
+    const b=e.target.closest('button[data-kyc]'); if(!b) return;
+    const u=users.find(x=>x.id===b.dataset.id); if(!u) return;
+    if(b.dataset.kyc==='remind'){ pushNotif('KYC reminder', `${u.name} (${u.id}) — please complete verification`); toast('Reminder sent'); }
+    if(b.dataset.kyc==='approve'){ u.kyc='approved'; toast('KYC approved'); renderKyc(); renderUsers(); }
+    if(b.dataset.kyc==='reject'){ u.kyc='rejected'; toast('KYC rejected'); renderKyc(); renderUsers(); }
+  });
+
+  /* ===== Chart.js ===== */
+  let rtChart, histChart;
+  function buildRealtimeChart(){
+    const ctx=document.getElementById('txChart'); if(!window.Chart || !ctx) return;
+    rtChart = new Chart(ctx,{
+      type:'line',
+      data:{ labels:["09:00","11:00","13:00","15:00","17:00","19:00"],
+        datasets:[{label:"Txn Volume (USD eq.)", data:[1200,1800,1500,2000,2400,2200],
+          borderColor:"#8b5cf6", backgroundColor:"rgba(139,92,246,.18)", fill:true, tension:.35, pointRadius:2}]},
+      options:{
+        maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{grid:{color:'rgba(255,255,255,.08)'}},
+          y:{beginAtZero:true, grid:{color:'rgba(255,255,255,.08)'}}
+        }
+      }
+    });
+    setInterval(()=>{
+      const v = Math.max(600, Math.round(2200 + (Math.random()-0.5)*700));
+      rtChart.data.datasets[0].data.push(v);
+      const now=new Date(); const label = now.toTimeString().slice(0,5);
+      rtChart.data.labels.push(label);
+      if(rtChart.data.labels.length>10){ rtChart.data.labels.shift(); rtChart.data.datasets[0].data.shift(); }
+      rtChart.update('none');
+    }, 3500);
+  }
+  function buildHistoryChart(){
+    const ctx=document.getElementById('histChart'); if(!window.Chart || !ctx) return;
+    const days=[...Array(7)].map((_,i)=> {
+      const d=new Date(); d.setDate(d.getDate()-(6-i));
+      return d;
+    });
+    const sums=days.map(d=>{
+      const key=d.toISOString().slice(0,10);
+      const daily=txns.filter(t=>t.date.slice(0,10)===key && t.status==='succeeded');
+      return daily.reduce((s,t)=>s+t.amount,0);
+    });
+    if(histChart){ histChart.destroy(); }
+    histChart = new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:days.map(d=>d.toLocaleDateString('en-US',{month:'short', day:'numeric'})),
+        datasets:[{label:'Daily Volume', data:sums, backgroundColor:'rgba(99,102,241,.35)', borderColor:'#6366f1'}]
+      },
+      options:{
+        maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{grid:{display:false}},
+          y:{beginAtZero:true, grid:{color:'rgba(255,255,255,.08)'}}
+        }
+      }
+    });
+  }
+
+  /* ===== Settings demo ===== */
+  $('#saveBrand').addEventListener('click', ()=>{ document.title = `${$('#setBrand').value} — Admin Panel`; toast('Brand saved'); });
+
+  /* ===== Init ===== */
+  function init(){
+    fillDatalists();
+    renderTreasury(); renderProfitAndKPIs(); renderUsers(); renderWithdraws(); renderTxns(); renderRecent();
+    buildRealtimeChart(); buildHistoryChart();
+  }
+  init();
+
+  /* Close modals on backdrop click */
+  $$('.backdrop').forEach(bd=> bd.addEventListener('click', (e)=>{ if(e.target===bd) closeModals(); }));
+  $$('[data-close]').forEach(b=> b.addEventListener('click', closeModals));
+})();
+</script>
+</body>
+</html>

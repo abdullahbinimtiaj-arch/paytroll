@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PAYTROLL — Help Centre</title>
+  <style>
+    :root{
+      --purple-1:#0b0817; --purple-2:#140b2b; --purple-3:#24104a; --purple-4:#3b177a;
+      --text:#fff; --muted:#cbd5e1; --border:rgba(255,255,255,.18);
+      --glass:rgba(255,255,255,.10); --glass2:rgba(255,255,255,.06);
+      --brand:#7c3aed; --brand2:#a855f7; --accent:#3b82f6;
+      --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+      --radius:18px;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif;
+      background:
+        radial-gradient(900px 600px at 20% 20%, rgba(109,40,217,.22), transparent 60%),
+        radial-gradient(800px 560px at 80% 80%, rgba(109,40,217,.16), transparent 60%),
+        linear-gradient(135deg, var(--purple-1) 0%, var(--purple-2) 25%, var(--purple-3) 55%, var(--purple-4) 80%, #000 100%);
+      background-attachment:fixed;
+    }
+
+    .wrap{max-width:1200px; margin:22px auto 80px; padding:0 18px}
+    .header{
+      display:grid; grid-template-columns:auto 1fr auto auto; gap:12px; align-items:center;
+      position:sticky; top:0; padding-bottom:14px; margin-bottom:18px; backdrop-filter:blur(10px);
+      z-index:5;
+    }
+    .logo{font-weight:900; letter-spacing:.6px}
+    .back{padding:10px 14px; border-radius:999px; background:var(--glass); border:1px solid var(--border);
+      text-decoration:none; color:#fff; font-weight:700}
+    .back:hover{background:rgba(255,255,255,.14)}
+    .search{
+      display:flex; align-items:center; gap:10px; background:var(--glass);
+      border:1px solid var(--border); padding:10px 12px; border-radius:999px; position:relative;
+    }
+    .search input{background:transparent; border:0; outline:0; color:#fff; width:100%}
+    .suggest{position:absolute; left:0; right:0; top:44px; background:rgba(10,12,20,.92);
+      border:1px solid var(--border); border-radius:14px; display:none; max-height:300px; overflow:auto}
+    .suggest a{display:block; padding:10px 12px; color:#cbd5e1; text-decoration:none}
+    .suggest a:hover{background:rgba(255,255,255,.06); color:#fff}
+
+    .lang{
+      background:var(--glass); border:1px solid var(--border); color:#fff; border-radius:12px; padding:8px 10px;
+    }
+
+    .grid{
+      display:grid; grid-template-columns:1.1fr .9fr; gap:18px;
+    }
+    .card{
+      background:var(--glass); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px; backdrop-filter:blur(18px); position:relative; overflow:hidden;
+    }
+    .card h3{margin:0 0 10px; font-size:18px}
+    .muted{color:var(--muted); font-size:13px}
+
+    .chips{display:flex; gap:8px; overflow:auto; padding:2px}
+    .chip{
+      padding:8px 12px; border-radius:999px; border:1px solid var(--border); background:var(--glass2);
+      color:#fff; font-size:13px; cursor:pointer; white-space:nowrap
+    }
+    .chip.active{background:linear-gradient(135deg,var(--brand),var(--brand2)); border-color:transparent}
+
+    .quick{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:10px}
+    .qbtn{
+      border-radius:14px; padding:14px; text-align:center; background:var(--glass2); border:1px solid var(--border);
+      text-decoration:none; color:#fff; font-weight:700; display:flex; flex-direction:column; gap:6px
+    }
+    .qbtn:hover{background:rgba(255,255,255,.14)}
+    .qbtn small{color:var(--muted); font-weight:600}
+
+    .status{
+      display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:12px;
+      background:rgba(255,255,255,.08); border:1px solid var(--border); width:max-content
+    }
+    .dot{width:10px; height:10px; border-radius:50%}
+    .ok{background:var(--ok)} .deg{background:var(--warn)} .down{background:var(--err)}
+
+    .faqs{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+    .faq{padding:14px; border-radius:14px; border:1px solid var(--border); background:var(--glass2); cursor:pointer}
+    .faq:hover{background:rgba(255,255,255,.14)}
+    .faq .t{font-weight:800}
+    .faq .c{color:#cbd5e1; font-size:13px}
+
+    .results{display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:12px}
+    .result{padding:14px; border-radius:14px; border:1px solid var(--border); background:var(--glass2); cursor:pointer}
+    .result:hover{background:rgba(255,255,255,.14)}
+    .badge{font-size:11px; padding:5px 8px; border:1px solid var(--border); border-radius:999px; color:#e5e7eb; background:var(--glass2)}
+
+    .mini-cols{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .table{width:100%; border-collapse:separate; border-spacing:0 8px; font-size:13px}
+    .table thead th{color:#cbd5e1; text-align:left; padding:0 8px}
+    .table tbody tr{background:rgba(255,255,255,.06); border:1px solid var(--border)}
+    .table tbody td{padding:10px 8px}
+    .table tbody tr td:first-child{border-top-left-radius:10px; border-bottom-left-radius:10px}
+    .table tbody tr td:last-child{border-top-right-radius:10px; border-bottom-right-radius:10px}
+
+    .list{display:flex; flex-direction:column; gap:10px}
+    .item{padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:var(--glass2)}
+    .item a{color:#fff}
+
+    .footer-actions{display:flex; gap:10px; justify-content:flex-end; margin-top:12px}
+    .btn{
+      background:rgba(255,255,255,.1); border:1px solid var(--border); color:#fff;
+      padding:10px 14px; border-radius:12px; cursor:pointer; font-weight:700
+    }
+    .btn.primary{border-color:transparent; background:linear-gradient(135deg,var(--accent),#2563eb)}
+
+    /* Article modal */
+    .modal{position:fixed; inset:0; display:none; place-items:center; background:rgba(10,12,20,.55); backdrop-filter:blur(8px); z-index:40}
+    .sheet{width:min(860px,94vw); max-height:90vh; overflow:auto; background:var(--glass); border:1px solid var(--border);
+      border-radius:20px; padding:20px}
+    .sheet h2{margin:0 0 6px}
+    .sheet .meta{display:flex; gap:8px; align-items:center; color:#cbd5e1; font-size:12px; margin-bottom:10px}
+    .sheet .body{line-height:1.7; color:#f8fafc; font-size:15px}
+    .sheet .toc{font-size:13px; color:#cbd5e1; margin:10px 0}
+    .close{position:sticky; top:0; float:right; background:rgba(255,255,255,.08); border:1px solid var(--border); padding:8px 12px; border-radius:10px; cursor:pointer}
+    .helpful{display:flex; gap:8px; align-items:center; margin-top:14px}
+    .thumb{width:38px; height:38px; border-radius:10px; display:grid; place-items:center; border:1px solid var(--border); background:rgba(255,255,255,.06); cursor:pointer}
+    .thumb.active{outline:2px solid var(--accent)}
+    .fbx{display:none; margin-top:10px}
+    .fbx textarea{width:100%; background:rgba(255,255,255,.06); border:1px solid var(--border); color:#fff; border-radius:12px; padding:10px}
+
+    /* Breadcrumbs */
+    .crumbs{font-size:12px; color:#cbd5e1; margin-bottom:8px}
+    .crumbs a{color:#cbd5e1; text-decoration:none}
+    .crumbs .sep{opacity:.5; margin:0 6px}
+
+    @media(max-width:1024px){ .grid{grid-template-columns:1fr} .faqs,.results{grid-template-columns:1fr} .quick{grid-template-columns:repeat(2,1fr)} .mini-cols{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">PAYTROLL</div>
+      <div class="search" role="search">
+        🔎
+        <input id="q" type="search" placeholder="Search help articles, e.g. reset password, KYC…"/>
+        <div id="suggest" class="suggest"></div>
+      </div>
+      <select id="lang" class="lang" title="Language">
+        <option value="en">English</option>
+        <option value="bn">বাংলা</option>
+        <option value="hi">हिन्दी</option>
+        <option value="ar">العربية</option>
+        <option value="fr">Français</option>
+        <option value="es">Español</option>
+        <option value="de">Deutsch</option>
+      </select>
+      <a class="back" href="dashboard.html" id="backDash" data-i18n="back">← Back to Dashboard</a>
+    </header>
+
+    <!-- Breadcrumbs -->
+    <div class="crumbs"><a href="#" id="crumb-home">Help Centre</a> <span class="sep">/</span> <span id="crumb-cat">All</span> <span class="sep">/</span> <span id="crumb-article">—</span></div>
+
+    <div class="grid">
+      <!-- Left column -->
+      <section class="card">
+        <h3 data-i18n="hc_title">How can we help?</h3>
+        <div class="muted" data-i18n="hc_sub">Browse by topic or search anything.</div>
+
+        <!-- Categories -->
+        <div class="chips" id="cats" style="margin:10px 0 6px">
+          <!-- injected -->
+        </div>
+
+        <!-- Quick links -->
+        <div class="quick">
+          <a class="qbtn" href="#" data-action="getting-started">🚀 Getting started <small>Basics & setup</small></a>
+          <a class="qbtn" href="#" data-action="reset-password">🔑 Reset password <small>Account & login</small></a>
+          <a class="qbtn" href="kyc.html">🪪 Verify KYC <small>Identity check</small></a>
+          <a class="qbtn" href="customer-service.html">💬 Contact support <small>Chat / Email</small></a>
+        </div>
+
+        <!-- Popular FAQs -->
+        <h3 style="margin-top:14px">Popular FAQs</h3>
+        <div class="faqs" id="faqs"></div>
+
+        <!-- Search results -->
+        <div id="resultsWrap" style="margin-top:8px">
+          <h3 style="display:none" id="resTitle">Results</h3>
+          <div class="results" id="results"></div>
+        </div>
+      </section>
+
+      <!-- Right column -->
+      <aside class="card">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px">
+          <h3>System status</h3>
+          <div class="status" id="statusBox"><span class="dot ok" id="statusDot"></span><span id="statusText">Operational</span></div>
+        </div>
+        <div class="muted" style="margin:8px 0 14px">All systems are running normally.</div>
+
+        <div class="mini-cols">
+          <!-- Fees & limits -->
+          <div class="card" style="padding:14px">
+            <h3>Fees & Limits</h3>
+            <table class="table" aria-label="Fees and limits">
+              <thead><tr><th>Action</th><th>Fee</th><th>Limit</th></tr></thead>
+              <tbody>
+                <tr><td>Send money</td><td>1.4%</td><td>$5–$5,000</td></tr>
+                <tr><td>Withdraw</td><td>2.0%</td><td>$20–$10,000</td></tr>
+                <tr><td>Add money</td><td>0%</td><td>$10–$7,500</td></tr>
+              </tbody>
+            </table>
+            <div class="footer-actions"><a class="btn" href="#">Full schedule</a></div>
+          </div>
+
+          <!-- Glossary -->
+          <div class="card" style="padding:14px">
+            <h3>Glossary</h3>
+            <div class="list">
+              <div class="item"><b>KYC:</b> Know Your Customer identity verification.</div>
+              <div class="item"><b>FX:</b> Foreign exchange currency conversion.</div>
+              <div class="item"><b>MFS:</b> Mobile Financial Service (e.g., bKash).</div>
+            </div>
+          </div>
+
+          <!-- Changelog -->
+          <div class="card" style="padding:14px">
+            <h3>Changelog</h3>
+            <div class="list">
+              <div class="item">v1.3 — Added deposit/withdraw history, PDF report</div>
+              <div class="item">v1.2 — New Help Centre & KYC flow</div>
+              <div class="item">v1.1 — Dashboard charts & filters</div>
+            </div>
+          </div>
+
+          <!-- Downloads / Policies -->
+          <div class="card" style="padding:14px">
+            <h3>Downloads & Policies</h3>
+            <div class="list">
+              <div class="item"><a href="#">User Guide (PDF)</a></div>
+              <div class="item"><a href="#">Privacy Policy</a></div>
+              <div class="item"><a href="#">Terms of Service</a></div>
+            </div>
+          </div>
+
+          <!-- Contact / Escalation -->
+          <div class="card" style="padding:14px">
+            <h3>Need more help?</h3>
+            <div class="list">
+              <div class="item">🤖 Try the <a href="#" id="openBot">Help bot</a> (instant answers)</div>
+              <div class="item">💬 <a href="customer-service.html">Live chat</a> (9am–9pm)</div>
+              <div class="item">✉️ Email: <a href="mailto:support@paytroll.example">support@paytroll.example</a></div>
+              <div class="item">🐞 <a href="#" id="reportIssue">Report a problem</a></div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Article modal -->
+  <div id="articleModal" class="modal" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <button class="close" id="closeArticle">✕</button>
+      <h2 id="artTitle">—</h2>
+      <div class="meta">
+        <span class="badge" id="artCat">—</span>
+        <span>•</span>
+        <span id="artRead">~3 min read</span>
+      </div>
+      <div class="toc" id="artToc"></div>
+      <div class="body" id="artBody"></div>
+
+      <div class="helpful">
+        <span>Was this helpful?</span>
+        <button class="thumb" id="thumbUp">👍</button>
+        <button class="thumb" id="thumbDown">👎</button>
+      </div>
+      <div class="fbx" id="fbWrap">
+        <textarea id="fbText" rows="3" placeholder="Tell us what was missing or confusing…"></textarea>
+        <div class="footer-actions"><button class="btn primary" id="fbSend">Send feedback</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback sheet (report a problem) -->
+  <div id="feedbackModal" class="modal" role="dialog" aria-modal="true">
+    <div class="sheet" style="max-width:640px">
+      <button class="close" id="closeFb">✕</button>
+      <h2>Report a problem</h2>
+      <div class="body">
+        <label>Subject
+          <input id="rbSub" style="display:block;width:100%;margin-top:6px;padding:10px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#fff">
+        </label>
+        <label style="display:block;margin-top:10px">Details
+          <textarea id="rbTxt" rows="5" style="display:block;width:100%;margin-top:6px;padding:10px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#fff"></textarea>
+        </label>
+        <div class="footer-actions">
+          <button class="btn" id="rbCancel">Cancel</button>
+          <button class="btn primary" id="rbSend">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- Data ---------- */
+    const CATEGORIES = [
+      'Account & Login','Payments & Transfers','Wallets & FX','KYC & Verification',
+      'Security & Privacy','Fees & Limits','Troubleshooting','Legal & Policies'
+    ];
+
+    const ARTICLES = [
+      {
+        id:'get-started',
+        title:'Getting started with PAYTROLL',
+        cat:'Account & Login',
+        read:3,
+        body:`
+          <h4 id="what">What you can do</h4>
+          <p>Create an account, add money, send/receive, withdraw to bank or MFS.</p>
+          <h4 id="steps">Basic steps</h4>
+          <ol>
+            <li>Sign up and confirm email.</li>
+            <li>Verify KYC (takes ~2 minutes).</li>
+            <li>Add money via card or deposit.</li>
+            <li>Send money or withdraw.</li>
+          </ol>
+          <h4 id="tips">Tips</h4>
+          <p>Enable 2FA in Settings → Security for stronger protection.</p>
+        `,
+        tags:['start','intro','signup']
+      },
+      {
+        id:'reset-password',
+        title:'Reset or change your password',
+        cat:'Account & Login',
+        read:2,
+        body:`
+          <h4 id="forgot">If you forgot the password</h4>
+          <p>On the Login page, click <b>Forgot password?</b> and follow the email link.</p>
+          <h4 id="change">Change from Settings</h4>
+          <p>Open Settings → Security → Change password. Enter old + new password.</p>
+          <h4 id="rules">Password rules</h4>
+          <ul><li>Min 8 chars</li><li>Use letters + numbers</li><li>Avoid reuse</li></ul>
+        `,
+        tags:['password','login']
+      },
+      {
+        id:'kyc-fast',
+        title:'Fast KYC verification',
+        cat:'KYC & Verification',
+        read:3,
+        body:`
+          <h4 id="need">Why KYC?</h4>
+          <p>KYC is required to comply with regulations and keep your account safe.</p>
+          <h4 id="how">How to verify</h4>
+          <p>Go to <b>KYC</b> page, upload ID + selfie. Result appears instantly in most cases.</p>
+        `,
+        tags:['kyc','verify','identity']
+      },
+      {
+        id:'send-fees',
+        title:'Send money fees & limits',
+        cat:'Fees & Limits',
+        read:2,
+        body:`
+          <p>Sending fee is <b>1.4%</b>. Limits vary by currency and KYC level.</p>
+          <ul><li>USD: $5–$5,000</li><li>EUR: €5–€4,500</li><li>GBP: £5–£4,000</li></ul>
+        `,
+        tags:['fees','limits','send']
+      },
+      {
+        id:'fx-how',
+        title:'How currency conversion (FX) works',
+        cat:'Wallets & FX',
+        read:2,
+        body:`<p>We convert using live rates with a small spread. You’ll see the rate before confirming.</p>`,
+        tags:['fx','rates','wallet']
+      },
+      {
+        id:'2fa',
+        title:'Turn on 2-factor authentication (2FA)',
+        cat:'Security & Privacy',
+        read:2,
+        body:`<p>Settings → Security → Enable 2FA. Use an authenticator app for the best experience.</p>`,
+        tags:['security','2fa']
+      },
+      {
+        id:'trouble-login',
+        title:'Trouble logging in',
+        cat:'Troubleshooting',
+        read:2,
+        body:`<p>Check email/password, reset if needed, or contact support if still blocked.</p>`,
+        tags:['trouble','login']
+      }
+    ];
+
+    const POPULAR_IDS = ['get-started','reset-password','kyc-fast','send-fees'];
+
+    /* ---------- Elements ---------- */
+    const catsEl = document.getElementById('cats');
+    const faqsEl = document.getElementById('faqs');
+    const qEl = document.getElementById('q');
+    const suggestEl = document.getElementById('suggest');
+    const resultsWrap = document.getElementById('resultsWrap');
+    const resTitle = document.getElementById('resTitle');
+    const resultsEl = document.getElementById('results');
+    const crumbsCat = document.getElementById('crumb-cat');
+    const crumbsArt = document.getElementById('crumb-article');
+
+    const modal = document.getElementById('articleModal');
+    const artTitle = document.getElementById('artTitle');
+    const artCat = document.getElementById('artCat');
+    const artRead = document.getElementById('artRead');
+    const artBody = document.getElementById('artBody');
+    const artToc  = document.getElementById('artToc');
+
+    const thumbUp = document.getElementById('thumbUp');
+    const thumbDown = document.getElementById('thumbDown');
+    const fbWrap = document.getElementById('fbWrap');
+    const fbSend = document.getElementById('fbSend');
+    const fbText = document.getElementById('fbText');
+
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    const feedbackModal = document.getElementById('feedbackModal');
+
+    /* ---------- Populate categories ---------- */
+    let activeCat = 'All';
+    function drawCats(){
+      catsEl.innerHTML = ['All',...CATEGORIES].map(c=>{
+        const a = c===activeCat ? 'active' : '';
+        return `<button class="chip ${a}" data-cat="${c}">${c}</button>`;
+      }).join('');
+    }
+    drawCats();
+
+    catsEl.addEventListener('click', e=>{
+      const btn = e.target.closest('[data-cat]'); if(!btn) return;
+      activeCat = btn.dataset.cat;
+      crumbsCat.textContent = activeCat;
+      drawCats();
+      renderResults(qEl.value.trim());
+    });
+
+    /* ---------- Popular FAQs ---------- */
+    function faqCard(a){
+      return `<article class="faq" data-id="${a.id}">
+        <div class="t">${a.title}</div>
+        <div class="c">${a.cat} • ~${a.read} min</div>
+      </article>`;
+    }
+    faqsEl.innerHTML = POPULAR_IDS.map(id => faqCard(ARTICLES.find(a=>a.id===id))).join('');
+
+    faqsEl.addEventListener('click', e=>{
+      const card = e.target.closest('.faq'); if(!card) return;
+      openArticle(card.dataset.id);
+    });
+
+    /* ---------- Search + suggestions ---------- */
+    function indexArticles(q){
+      const qq = q.toLowerCase();
+      return ARTICLES.filter(a=>{
+        const hay = (a.title+' '+a.cat+' '+a.tags.join(' ')).toLowerCase();
+        const catOk = (activeCat==='All'||a.cat===activeCat);
+        return catOk && hay.includes(qq);
+      });
+    }
+    function renderResults(q){
+      const list = q ? indexArticles(q) : (activeCat==='All' ? ARTICLES : ARTICLES.filter(a=>a.cat===activeCat));
+      resTitle.style.display='block';
+      resultsEl.innerHTML = list.map(a=>`
+        <article class="result" data-id="${a.id}">
+          <div style="display:flex;justify-content:space-between;gap:10px">
+            <div style="font-weight:800">${a.title}</div>
+            <span class="badge">${a.cat}</span>
+          </div>
+          <div class="muted">~${a.read} min • ${a.tags.join(', ')}</div>
+        </article>
+      `).join('');
+    }
+    renderResults('');
+
+    qEl.addEventListener('input', ()=>{
+      const v = qEl.value.trim();
+      if(!v){ suggestEl.style.display='none'; renderResults(''); return; }
+      const hits = indexArticles(v).slice(0,8);
+      suggestEl.innerHTML = hits.map(h=>`<a href="#" data-id="${h.id}">${h.title} — <span class="muted">${h.cat}</span></a>`).join('');
+      suggestEl.style.display = hits.length? 'block':'none';
+    });
+    suggestEl.addEventListener('click', e=>{
+      const a = e.target.closest('a'); if(!a) return;
+      e.preventDefault(); suggestEl.style.display='none'; qEl.value=''; openArticle(a.dataset.id);
+    });
+    resultsEl.addEventListener('click', e=>{
+      const card = e.target.closest('.result'); if(!card) return;
+      openArticle(card.dataset.id);
+    });
+
+    /* ---------- Article modal ---------- */
+    function openArticle(id){
+      const a = ARTICLES.find(x=>x.id===id); if(!a) return;
+      crumbsArt.textContent = a.title;
+      artTitle.textContent = a.title;
+      artCat.textContent = a.cat;
+      artRead.textContent = `~${a.read} min read`;
+      artBody.innerHTML = a.body;
+
+      // simple TOC from h4
+      const hs = [...artBody.querySelectorAll('h4')];
+      artToc.innerHTML = hs.length ? ('On this page: ' + hs.map(h=>`<a href="#${h.id}" style="color:#93c5fd;text-decoration:none">${h.textContent}</a>`).join(' • ')) : '';
+
+      thumbUp.classList.remove('active'); thumbDown.classList.remove('active'); fbWrap.style.display='none';
+      modal.style.display='grid';
+    }
+    document.getElementById('closeArticle').addEventListener('click', ()=> modal.style.display='none');
+    modal.addEventListener('click', e=>{ if(e.target===modal) modal.style.display='none'; });
+
+    thumbUp.addEventListener('click', ()=>{
+      thumbUp.classList.add('active'); thumbDown.classList.remove('active'); fbWrap.style.display='none';
+      localStorage.setItem('hc_last_feedback','up');
+    });
+    thumbDown.addEventListener('click', ()=>{
+      thumbDown.classList.add('active'); thumbUp.classList.remove('active'); fbWrap.style.display='block';
+    });
+    fbSend.addEventListener('click', ()=>{
+      const t = fbText.value.trim();
+      localStorage.setItem('hc_feedback_text', t||'(empty)');
+      fbText.value=''; fbWrap.style.display='none'; alert('Thanks for the feedback!');
+    });
+
+    /* ---------- Status widget (demo) ---------- */
+    const STATUS = 'operational'; // 'operational' | 'degraded' | 'down'
+    (function setStatus(){
+      if(STATUS==='operational'){ statusDot.className='dot ok'; statusText.textContent='Operational'; }
+      if(STATUS==='degraded'){ statusDot.className='dot deg'; statusText.textContent='Degraded'; }
+      if(STATUS==='down'){ statusDot.className='dot down'; statusText.textContent='Incident'; }
+    })();
+
+    /* ---------- Contact actions ---------- */
+    document.getElementById('openBot').addEventListener('click', (e)=>{ e.preventDefault(); alert('Bot coming soon (demo)'); });
+    const reportIssue = document.getElementById('reportIssue');
+    reportIssue.addEventListener('click', (e)=>{ e.preventDefault(); feedbackModal.style.display='grid'; });
+    document.getElementById('rbCancel').addEventListener('click', ()=> feedbackModal.style.display='none');
+    document.getElementById('closeFb').addEventListener('click', ()=> feedbackModal.style.display='none');
+    feedbackModal.addEventListener('click', e=>{ if(e.target===feedbackModal) feedbackModal.style.display='none'; });
+    document.getElementById('rbSend').addEventListener('click', ()=>{
+      const sub=document.getElementById('rbSub').value.trim();
+      const txt=document.getElementById('rbTxt').value.trim();
+      localStorage.setItem('hc_report', JSON.stringify({sub,txt, ts:Date.now()}));
+      alert('Thanks! Your report was recorded (demo).');
+      feedbackModal.style.display='none';
+    });
+
+    /* ---------- Language (lightweight i18n for a few labels) ---------- */
+    const I18N = {
+      en:{ back:'← Back to Dashboard', hc_title:'How can we help?', hc_sub:'Browse by topic or search anything.' },
+      bn:{ back:'← ড্যাশবোর্ডে ফিরে যান', hc_title:'কিভাবে সাহায্য করতে পারি?', hc_sub:'টপিক বেছে নিন বা সার্চ করুন।' },
+      hi:{ back:'← डैशबोर्ड पर लौटें', hc_title:'हम कैसे मदद कर सकते हैं?', hc_sub:'टॉपिक देखें या कुछ भी खोजें।' },
+      ar:{ back:'← عودة للوحة التحكم', hc_title:'كيف يمكننا المساعدة؟', hc_sub:'تصفح حسب الموضوع أو ابحث.' },
+      fr:{ back:'← Retour au tableau de bord', hc_title:'Comment pouvons-nous aider ?', hc_sub:'Parcourez par thème ou cherchez.' },
+      es:{ back:'← Volver al panel', hc_title:'¿Cómo podemos ayudarte?', hc_sub:'Explora por tema o busca.' },
+      de:{ back:'← Zurück zum Dashboard', hc_title:'Wie können wir helfen?', hc_sub:'Nach Themen stöbern oder suchen.' }
+    };
+    const langSel = document.getElementById('lang');
+    function applyLang(code){
+      const dict = I18N[code]||I18N.en;
+      document.querySelectorAll('[data-i18n]').forEach(el=>{
+        const k = el.getAttribute('data-i18n');
+        if(dict[k]) el.textContent = dict[k];
+      });
+    }
+    langSel.addEventListener('change', ()=>{
+      applyLang(langSel.value);
+      if(!I18N[langSel.value]) alert('UI labels only (demo).');
+    });
+    applyLang('en');
+
+    /* ---------- Keyboard niceties ---------- */
+    document.addEventListener('keydown', e=>{
+      if(e.key==='/' && document.activeElement.tagName!=='INPUT' && document.activeElement.tagName!=='TEXTAREA'){
+        e.preventDefault(); qEl.focus();
+      }
+      if(e.key==='Escape'){ modal.style.display='none'; feedbackModal.style.display='none'; suggestEl.style.display='none'; }
+    });
+
+    /* ---------- Quick links actions ---------- */
+    document.querySelectorAll('.qbtn[data-action]').forEach(b=>{
+      b.addEventListener('click', e=>{
+        e.preventDefault();
+        const a = b.getAttribute('data-action');
+        if(a==='getting-started') openArticle('get-started');
+        if(a==='reset-password') openArticle('reset-password');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PAYTROLL — Create Account</title>
+  <style>
+    :root{
+      --purple-1:#0b0817; --purple-2:#140b2b; --purple-3:#24104a; --purple-4:#3b177a; --text:#fff;
+      --border:rgba(255,255,255,.20); --btn:#2563eb; --btn-hover:#1d4ed8; --radius:14px;
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif; color:var(--text);
+      background:
+        radial-gradient(900px 600px at 20% 20%, rgba(109,40,217,.22), transparent 60%),
+        radial-gradient(800px 560px at 80% 80%, rgba(109,40,217,.16), transparent 60%),
+        linear-gradient(135deg, var(--purple-1) 0%, var(--purple-2) 25%, var(--purple-3) 55%, var(--purple-4) 80%, #000 100%);
+      background-attachment:fixed;
+    }
+    .wrap{
+      min-height:100dvh; display:grid; place-items:center; padding:16px;
+    }
+    .sheet{
+      width:min(92vw, 520px);           /* আগে 560px ছিল */
+      border-radius:20px;
+      background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border:1px solid var(--border);
+      box-shadow:0 24px 90px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12);
+      backdrop-filter: blur(12px) saturate(120%); -webkit-backdrop-filter: blur(12px) saturate(120%);
+      overflow:hidden; animation:floatIn .45s ease-out both;
+    }
+    @keyframes floatIn{from{opacity:0; transform:translateY(14px) scale(.985)}to{opacity:1; transform:translateY(0) scale(1)}}
+    .panel-inner{ padding:22px 18px 24px }
+    @media (min-width:520px){ .panel-inner{ padding:26px 24px 28px } }
+
+    .brand{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+    .brand .logo{font-weight:900; letter-spacing:.5px; font-size:18px}
+    .brand .back-login{
+      background:rgba(255,255,255,.10); padding:8px 12px; border-radius:999px; border:1px solid var(--border);
+      font-weight:600; color:#fff; text-decoration:none; font-size:13px
+    }
+    .brand .back-login:hover{background:rgba(255,255,255,.16)}
+
+    .card-form{background:#fff; color:#0b1220; border-radius:var(--radius); padding:22px; box-shadow:0 14px 48px rgba(0,0,0,.22)}
+    @media (min-width:520px){ .card-form{padding:24px} }
+    .title{font-size:26px; font-weight:800; margin:0 0 8px}
+    .sub{color:#4b5563; margin:0 0 16px; font-size:13px}
+
+    .grid{display:grid; gap:10px}
+    .twocol{grid-template-columns:1fr 1fr; gap:10px}
+    @media (max-width:520px){ .twocol{grid-template-columns:1fr} }
+
+    label{font-size:12px; color:#334155; font-weight:700}
+    .input{
+      margin-top:6px; display:flex; align-items:center; gap:8px;
+      background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px;
+      transition:border .2s, box-shadow .2s;
+    }
+    .input:focus-within{border-color:#93c5fd; box-shadow:0 0 0 3px rgba(37,99,235,.14)}
+    .input input{border:0; outline:0; background:transparent; width:100%; font-size:14px; color:#0b1220}
+    .hint{font-size:11px; color:#6b7280; margin-top:6px}
+
+    .pw-toggle{cursor:pointer; user-select:none; font-size:12px; color:#2563eb; font-weight:700}
+
+    .actions{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:4px}
+    .chk{display:flex; align-items:center; gap:8px; color:#475569; font-size:13px}
+    .chk input{width:16px; height:16px}
+
+    .btn{
+      appearance:none; border:0; cursor:pointer; border-radius:12px; padding:12px 16px; font-weight:800;
+      background:var(--btn); color:#fff; transition:.2s; width:100%; font-size:15px;
+      box-shadow:0 10px 28px rgba(37,99,235,.32)
+    }
+    .btn:hover{background:var(--btn-hover); transform:translateY(-1px)}
+    .btn:active{transform:translateY(0)}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+
+    .foot{margin-top:14px; font-size:11px; color:#cbd5e1; text-align:center}
+
+    .sheen{
+      position:fixed; width:48vmax; height:48vmax; border-radius:50%;
+      background:radial-gradient(circle at 50% 50%, rgba(109,40,217,.22), rgba(109,40,217,0) 60%);
+      filter:blur(42px); pointer-events:none; z-index:-1; transform:translate(-30%, -30%);
+      animation:drift 16s ease-in-out infinite alternate;
+    }
+    @keyframes drift{from{transform:translate(-34%, -30%)}to{transform:translate(6%, 0%)}}
+  </style>
+</head>
+<body>
+  <div class="sheen" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <div class="sheet" role="region" aria-label="Create account">
+      <div class="panel-inner">
+        <div class="brand">
+          <div class="logo">PAYTROLL</div>
+          <a class="back-login" href="login.html">Already have an account? Log in</a>
+        </div>
+
+        <div class="card-form" role="form" aria-labelledby="title">
+          <h1 id="title" class="title">Create account</h1>
+          <p class="sub">It’s fast and free. We’ll never share your data.</p>
+
+          <form id="signup" action="#" method="post" novalidate>
+            <div class="grid twocol">
+              <div>
+                <label>First name
+                  <div class="input"><input type="text" name="firstName" autocomplete="given-name" required/></div>
+                </label>
+              </div>
+              <div>
+                <label>Last name
+                  <div class="input"><input type="text" name="lastName" autocomplete="family-name" required/></div>
+                </label>
+              </div>
+            </div>
+
+            <div class="grid">
+              <label>Email
+                <div class="input"><input id="email" type="email" name="email" autocomplete="email" inputmode="email" required/></div>
+              </label>
+
+              <label>Password
+                <div class="input">
+                  <input id="pw" type="password" name="password" minlength="8" autocomplete="new-password" required/>
+                  <span id="toggle" class="pw-toggle" aria-controls="pw" aria-pressed="false">Show</span>
+                </div>
+                <div class="hint">At least 8 characters with letters and numbers.</div>
+              </label>
+
+              <label>Confirm password
+                <div class="input"><input id="pw2" type="password" name="password2" minlength="8" autocomplete="new-password" required/></div>
+              </label>
+
+              <div class="actions">
+                <label class="chk">
+                  <input type="checkbox" id="tos" required />
+                  <span>I agree to the <a href="#">Terms</a> and <a href="#">Privacy</a></span>
+                </label>
+              </div>
+
+              <button class="btn" type="submit">Create Account →</button>
+
+              <div style="margin-top:10px;">
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                     data-context="signup"
+                     data-ux_mode="popup"
+                     data-callback="onGoogleSignIn"
+                     data-auto_prompt="false"></div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-width="100%"
+                     data-text="continue_with"
+                     data-shape="pill"
+                     data-theme="outline"></div>
+              </div>
+
+              <div class="foot">© 2025 PAYTROLL</div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script type="module">
+    /* Firebase imports */
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  
+    /* তোমার Firebase config (অপরিবর্তিত) */
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhZMh2GxUYmeZFA2l_gp5SCugLKCxAfPI",
+      authDomain: "paytroll-ee598.firebaseapp.com",
+      projectId: "paytroll-ee598",
+      storageBucket: "paytroll-ee598.firebasestorage.app",
+      messagingSenderId: "932912748301",
+      appId: "1:932912748301:web:786063508d5b84fb498244",
+      measurementId: "G-G6603S6Q91"
+    };
+  
+    /* Init */
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+  
+    const toggle = document.getElementById('toggle');
+    const pw     = document.getElementById('pw');
+    toggle?.addEventListener('click', () => {
+      const isPw = pw.type === 'password';
+      pw.type = isPw ? 'text' : 'password';
+      toggle.textContent = isPw ? 'Hide' : 'Show';
+      toggle.setAttribute('aria-pressed', String(isPw));
+    });
+  
+    /* ===== Signup submit → Firebase ===== */
+    const form = document.getElementById('signup');
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+  
+      const email = (document.getElementById('email')?.value || '').trim();
+      const pw1   = (document.getElementById('pw')?.value   || '').trim();
+      const pw2   = (document.getElementById('pw2')?.value  || '').trim();
+  
+      if (pw1 !== pw2) { alert('Passwords do not match.'); return; }
+      if (pw1.length < 8) { alert('Password must be at least 8 characters.'); return; }
+      if (!document.getElementById('tos')?.checked) { alert('You must agree to the Terms.'); return; }
+      if (!email) { alert('Please enter your email.'); return; }
+  
+      const btn = form.querySelector('.btn');
+      const old = btn?.textContent;
+      if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
+  
+      try {
+        await createUserWithEmailAndPassword(auth, email, pw1);
+        window.location.href = 'login.html';
+      } catch (err) {
+        alert(err?.message || 'Signup failed.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = old; }
+      }
+    });
+  
+    window.onGoogleSignIn = function onGoogleSignIn(response){
+      alert('Google sign-in token received. Connect backend to complete login.');
+      window.location.href = 'login.html';
+    };
+  </script>
+</body>
+</html>
